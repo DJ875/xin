@@ -1,7 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
     // 获取用户信息
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    if (!userInfo || userInfo.userType !== 'merchant') {
+    
+    // 检查是否登录且是商家账号
+    if (!userInfo) {
+        console.log('未登录，重定向到登录页面');
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    if (userInfo.userType !== 'merchant') {
+        console.log('非商家账号，重定向到登录页面');
+        // 清除localStorage中的用户信息
+        localStorage.removeItem('userInfo');
+        alert('请使用商家账号登录');
         window.location.href = 'index.html';
         return;
     }

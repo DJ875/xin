@@ -249,4 +249,5 @@ router.get('/products', async (req, res) => {
 
 app.use('/.netlify/functions/api', router);
 
+// 导出serverless handler
 module.exports.handler = serverless(app); 

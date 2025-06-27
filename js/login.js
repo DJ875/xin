@@ -48,6 +48,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
     
     try {
+        console.log('发送登录请求:', {
+            url: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`,
+            userType: currentLoginType,
+            username
+        });
+        
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
             method: 'POST',
             headers: {
@@ -60,7 +66,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             })
         });
         
+        console.log('收到响应:', {
+            status: response.status,
+            statusText: response.statusText
+        });
+        
         const data = await response.json();
+        console.log('响应数据:', data);
         
         if (!response.ok) {
             throw new Error(data.message || '登录失败');
@@ -72,13 +84,19 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             
             // 根据用户类型跳转到不同页面
             if (data.user.userType === 'merchant') {
-                window.location.href = 'merchant_dashboard.html';
+                console.log('商家登录成功，跳转到商家管理页面');
+                // 确保清除任何可能导致循环的状态
+                sessionStorage.removeItem('loginRedirect');
+                window.location.replace('merchant_dashboard.html');
             } else {
-                window.location.href = 'main.html';
+                console.log('用户登录成功，跳转到主页');
+                window.location.replace('main.html');
             }
+            return; // 确保不会继续执行
         }
     } catch (error) {
         console.error('登录错误:', error);
+        console.error('错误详情:', error.message);
         if (error.message.includes('用户名不存在')) {
             showError('usernameError', '用户名不存在');
         } else if (error.message.includes('密码错误')) {
@@ -88,7 +106,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         } else if (error.message.includes('用户账号')) {
             showError('usernameError', '此账号是用户账号，请使用用户登录');
         } else {
-            showError('passwordError', '登录失败，请稍后重试');
+            showError('passwordError', `登录失败: ${error.message}`);
         }
     }
 });
