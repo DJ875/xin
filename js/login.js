@@ -1,0 +1,111 @@
+let currentLoginType = 'user';
+
+function switchLoginType(type) {
+    currentLoginType = type;
+    const userBtn = document.getElementById('userLoginBtn');
+    const merchantBtn = document.getElementById('merchantLoginBtn');
+    const registerLink = document.getElementById('registerLink');
+    const merchantRegisterLink = document.getElementById('merchantRegisterLink');
+    
+    if (type === 'user') {
+        userBtn.classList.add('active');
+        merchantBtn.classList.remove('active');
+        registerLink.style.display = 'block';
+        merchantRegisterLink.style.display = 'none';
+    } else {
+        merchantBtn.classList.add('active');
+        userBtn.classList.remove('active');
+        registerLink.style.display = 'none';
+        merchantRegisterLink.style.display = 'block';
+    }
+}
+
+// 初始化Netlify Identity
+if (window.netlifyIdentity) {
+    window.netlifyIdentity.on("init", user => {
+        if (user) {
+            // 如果已登录，根据用户类型跳转
+            const userType = user.user_metadata.type || 'user';
+            redirectToHome(userType);
+        }
+    });
+}
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    // 清除之前的错误信息
+    clearErrors();
+    
+    // 简单的验证
+    if (!username || !password) {
+        if (!username) showError('usernameError', '请输入用户名');
+        if (!password) showError('passwordError', '请输入密码');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username,
+                password,
+                userType: currentLoginType
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || '登录失败');
+        }
+        
+        if (data.success) {
+            // 保存用户信息到localStorage
+            localStorage.setItem('userInfo', JSON.stringify(data.user));
+            
+            // 根据用户类型跳转到不同页面
+            if (data.user.userType === 'merchant') {
+                window.location.href = 'merchant_dashboard.html';
+            } else {
+                window.location.href = 'main.html';
+            }
+        }
+    } catch (error) {
+        console.error('登录错误:', error);
+        if (error.message.includes('用户名不存在')) {
+            showError('usernameError', '用户名不存在');
+        } else if (error.message.includes('密码错误')) {
+            showError('passwordError', '密码错误');
+        } else if (error.message.includes('商家账号')) {
+            showError('usernameError', '此账号是商家账号，请使用商家登录');
+        } else if (error.message.includes('用户账号')) {
+            showError('usernameError', '此账号是用户账号，请使用用户登录');
+        } else {
+            showError('passwordError', '登录失败，请稍后重试');
+        }
+    }
+});
+
+function redirectToHome(userType) {
+    if (userType === 'merchant') {
+        window.location.href = 'merchant_dashboard.html';
+    } else {
+        window.location.href = 'main.html';
+    }
+}
+
+function showError(elementId, message) {
+    document.getElementById(elementId).textContent = message;
+}
+
+function clearErrors() {
+    document.getElementById('usernameError').textContent = '';
+    document.getElementById('passwordError').textContent = '';
+} 

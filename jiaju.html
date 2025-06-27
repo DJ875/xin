@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物系统</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        /* 特色区域 */
+        .features {
+            padding: 4rem 0;
+            background: white;
+        }
+
+        .feature-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            display: flex;
+            padding: 2rem;
+            background: #f9f9f9;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: var();
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var();
+            margin-right: 1.5rem;
+        }
+
+        .feature-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+        }
+
+        /* 添加购物动画样式 */
+        .add-to-cart-animation {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+<!-- 顶部导航栏 -->
+<nav class="top-nav">
+    <div class="nav-logo">家具</div>
+    <div class="nav-menu">
+        <a href="main.html" class="active">主页</a>
+        <a href="category.html">分类</a>
+        <a href="promotion.html">促销</a>
+        <a href="help.html">帮助中心</a>
+    </div>
+    <div class="nav-user">
+        <span class="user-welcome">User</span>
+        <a href="index.html" class="logout">退出登录</a>
+    </div>
+</nav>
+<!-- 主要内容区 -->
+<main class="main-content">
+    <!-- 商品展示 -->
+    <div class="products-grid">
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian1',
+                    name: '奥克斯AUX 按摩器',
+                    price: 178.00,
+                    image: 'images/41.jpg',
+                    description: '颈部背部腰部腿部足部 脖颈肩 家用揉捏全身电动仪 GL-D1。'
+                })">
+            <img src="images/41.jpg" alt="商品1">
+            <h3>奥克斯AUX 按摩器</h3>
+            <p class="price">¥178.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian2',
+                    name: '小米 米家随行便携榨汁机2',
+                    price: 107.00,
+                    image: 'images/42.jpg',
+                    description: '榨汁机 多重安全保护 无线 MJZZB02PL。'
+                })">
+            <img src="images/42.jpg" alt="商品2">
+            <h3>小米 米家随行便携榨汁机2</h3>
+            <p class="price">¥107.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian3',
+                    name: '奥克斯AUX 电竞椅',
+                    price: 599.00,
+                    image: 'images/43.jpg',
+                    description: '办公电脑椅游戏久坐舒适老板沙发按摩座椅人体工学靠背椅子。'
+                })">
+            <img src="images/43.jpg" alt="商品3">
+            <h3>奥克斯AUX 电竞椅</h3>
+            <p class="price">¥599.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian4',
+                    name: '美的Midea 侧吸式 油烟机',
+                    price: 799.00,
+                    image: 'images/44.jpg',
+                    description: '家用 劲速排烟 宽域拢烟 双重负压。'
+                })">
+            <img src="images/44.jpg" alt="商品4">
+            <h3>美的Midea 侧吸式 油烟机</h3>
+            <p class="price">¥799.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian5',
+                    name: 'SUPOR苏泊尔 吸抽油烟机',
+                    price: 539.40,
+                    image: 'images/45.jpg',
+                    description: '欧式家用厨房顶吸小型排油烟机 大吸力油烟机。'
+                })">
+            <img src="images/45.jpg" alt="商品5">
+            <h3>SUPOR苏泊尔 吸抽油烟机</h3>
+            <p class="price">¥539.40</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian6',
+                    name: '艾芭莎 AIBAASAA M60',
+                    price: 89.00,
+                    image: 'images/46.jpg',
+                    description: '桌面风扇 充电长续航 无叶式 台式迷你便携 办公家用空调房厨房挂壁 学生寝室静音大风力。'
+                })">
+            <img src="images/46.jpg" alt="商品6">
+            <h3>艾芭莎 AIBAASAA M60</h3>
+            <p class="price">¥89.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian7',
+                    name: '美的Midea SAF30AB',
+                    price: 123.00,
+                    image: 'images/47.jpg',
+                    description: '落地扇 七叶大风 立式电风扇 家用柔风 台式桌面小型 大风量节能摇头宿舍。'
+                })">
+            <img src="images/47.jpg" alt="商品6">
+            <h3>美的Midea SAF30AB</h3>
+            <p class="price">¥123.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian8',
+                    name: 'Pepsi百事',
+                    price: 192.00,
+                    image: 'images/48.jpg',
+                    description: '车家两用 车载冰箱 220V交流 12V直流。'
+                })">
+            <img src="images/48.jpg" alt="商品6">
+            <h3>Pepsi百事</h3>
+            <p class="price">¥192.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian9',
+                    name: '小米 米家 185L',
+                    price: 712.00,
+                    image: 'images/49.jpg',
+                    description: '双门式 冰箱 宿舍家用小型精致简约欧式设计 直冷 三级能效。'
+                })">
+            <img src="images/49.jpg" alt="商品6">
+            <h3>小米 米家 185L</h3>
+            <p class="price">¥712.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian10',
+                    name: '奥克斯AUX 冰吧',
+                    price: 599.00,
+                    image: 'images/50.jpg',
+                    description: '家用 冷藏柜 小型透明单门冰箱 办公室茶叶饮料红酒柜 保鲜。'
+                })">
+            <img src="images/50.jpg" alt="商品6">
+            <h3>奥克斯AUX 冰吧</h3>
+            <p class="price">¥599.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian11',
+                    name: '凡积 电脑桌',
+                    price: 98.00,
+                    image: 'images/51.jpg',
+                    description: '台式电竞桌子家用带置物架办公桌椅简易书桌卧室 写字桌。'
+                })">
+            <img src="images/51.jpg" alt="商品6">
+            <h3>凡积 电脑桌</h3>
+            <p class="price">¥98.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian12',
+                    name: '全品屋 北欧风餐桌',
+                    price: 107.00,
+                    image: 'images/52.jpg',
+                    description: '原木风胡桃木色小户型茶桌 家用长方形吃饭桌子45°圆角60MM饭桌 卧室用加厚15MM实木台高承重茶几。'
+                })">
+            <img src="images/52.jpg" alt="商品6">
+            <h3>全品屋 北欧风餐桌</h3>
+            <p class="price">¥107.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian13',
+                    name: '祥业  懒人石磨泡茶壶',
+                    price: 179.00,
+                    image: 'images/53.jpg',
+                    description: '高颜值实用自动功夫茶具套装全套 家用客厅 整套中式高档陶瓷茶杯流水茶盘套装 办公冲茶器 整套茶具。'
+                })">
+            <img src="images/53.jpg" alt="商品6">
+            <h3>祥业  懒人石磨泡茶壶</h3>
+            <p class="price">¥179.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'jiadian14',
+                    name: '木马人 移动茶桌',
+                    price: 399.00,
+                    image: 'images/54.jpg',
+                    description: '小茶台烧水壶一体家用高端阳台客厅茶几泡茶桌子 万向滚轮 带抽带门 多款式可选 结实耐用。'
+                })">
+            <img src="images/54.jpg" alt="商品6">
+            <h3>木马人 移动茶桌</h3>
+            <p class="price">¥399.00</p>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- 特色区域 -->
+<section class="features">
+    <div class="container">
+        <div class="feature-container">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>快速配送</h3>
+                    <p>全国主要城市次日达，偏远地区72小时内送达</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>正品保障</h3>
+                    <p>所有商品均从品牌官方授权渠道采购，100%正品</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-undo"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>无忧退换</h3>
+                    <p>7天无理由退换货，购物更安心</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="js/common.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

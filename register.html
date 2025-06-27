@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 商城系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <div class="login-left">
+                <img src="images/login-character.jpg.png" alt="欢迎光临" class="character-image">
+            </div>
+            <div class="login-right">
+                <h1>用户注册</h1>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <input type="text" id="username" placeholder="用户名" required>
+                        <div class="error-message" id="usernameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="password" placeholder="密码" required>
+                        <div class="error-message" id="passwordError"></div>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="confirmPassword" placeholder="确认密码" required>
+                        <div class="error-message" id="confirmPasswordError"></div>
+                    </div>
+                    <button type="submit" class="login-button">本地注册</button>
+                    <button type="button" class="login-button netlify-button" onclick="netlifySignup()">Netlify注册</button>
+                </form>
+                <div class="additional-links">
+                    <a href="index.html" class="back-to-login">返回登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                if (!user) {
+                    window.netlifyIdentity.on("login", () => {
+                        window.location.href = "index.html";
+                    });
+                }
+            });
+        }
+    </script>
+    <script src="js/register.js"></script>
+</body>
+</html> 

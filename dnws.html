@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物系统</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        /* 特色区域 */
+        .features {
+            padding: 4rem 0;
+            background: white;
+        }
+
+        .feature-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            display: flex;
+            padding: 2rem;
+            background: #f9f9f9;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: var();
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var();
+            margin-right: 1.5rem;
+        }
+
+        .feature-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+        }
+
+        /* 添加购物动画样式 */
+        .add-to-cart-animation {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+<!-- 顶部导航栏 -->
+<nav class="top-nav">
+    <div class="nav-logo">电脑外设</div>
+    <div class="nav-menu">
+        <a href="main.html" class="active">主页</a>
+        <a href="category.html">分类</a>
+        <a href="promotion.html">促销</a>
+        <a href="help.html">帮助中心</a>
+    </div>
+    <div class="nav-user">
+        <span class="user-welcome">User</span>
+        <a href="index.html" class="logout">退出登录</a>
+    </div>
+</nav>
+<!-- 主要内容区 -->
+<main class="main-content">
+    <!-- 商品展示 -->
+    <div class="products-grid">
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'ws1',
+                    name: '狼蛛 AULA F87/L87 2025款',
+                    price: 219.00,
+                    image: 'images/67.jpg',
+                    description: '三模客制化 Gasket结构 87配列 全键热插拔 RGB背光灯效 宏驱动 音乐律动 超长续航 键盘。'
+                })">
+            <img src="images/67.jpg" alt="商品1">
+            <h3>狼蛛 AULA F87/L87 2025款'</h3>
+            <p class="price">¥219.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'ws2',
+                    name: '前行者 X87',
+                    price: 236.00,
+                    image: 'images/68.jpg',
+                    description: '黑莓无线机械键盘无线蓝牙三模gasket客制化5层消音填充侧刻全键无冲高颜值 超长续航游戏电竞办公电脑平板iPad通用。'
+                })">
+            <img src="images/68.jpg" alt="商品2">
+            <h3>前行者 X87</h3>
+            <p class="price">¥236.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'ws3',
+                    name: '狼蛛 AULA HERO 68',
+                    price: 208.00,
+                    image: 'images/69.jpg',
+                    description: ' HE 8K回报率 RT0.01高性能 RGB霓虹灯箱 多层填充 2025款 高性能电竞游戏吃鸡CSGO适用 磁轴键盘。'
+                })">
+            <img src="images/69.jpg" alt="商品3">
+            <h3>狼蛛 AULA HERO 68</h3>
+            <p class="price">¥208.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'ws4',
+                    name: '罗技 Logitech G102第二代',
+                    price: 88.00,
+                    image: 'images/70.jpg',
+                    description: '有线连接 RGB流光灯效 轻量化 游戏级8000DPI传感器 鼠标。'
+                })">
+            <img src="images/70.jpg" alt="商品4">
+            <h3>罗技 Logitech G102第二代'</h3>
+            <p class="price">¥88.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'ws5',
+                    name: 'Razer雷蛇 炼狱蝰蛇标准版',
+                    price: 92.40,
+                    image: 'images/71.jpg',
+                    description: '有线连接 黑白色USB电脑办公电竞游戏CSGO 鼠标。'
+                })">
+            <img src="images/71.jpg" alt="商品5">
+            <h3>Razer雷蛇 炼狱蝰蛇标准版</h3>
+            <p class="price">¥92.40</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'ws6',
+                    name: '泰坦军团TITAN ARMY P2510G',
+                    price: 499.00,
+                    image: 'images/72.jpg',
+                    description: ' 24.5英寸 IPS面板 1ms响应 180HZ刷新 电竞 显示器 硬件低蓝光不闪屏。'
+                })">
+            <img src="images/72.jpg" alt="商品6">
+            <h3>泰坦军团TITAN ARMY P2510G</h3>
+            <p class="price">¥499.00</p>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- 特色区域 -->
+<section class="features">
+    <div class="container">
+        <div class="feature-container">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>快速配送</h3>
+                    <p>全国主要城市次日达，偏远地区72小时内送达</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>正品保障</h3>
+                    <p>所有商品均从品牌官方授权渠道采购，100%正品</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-undo"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>无忧退换</h3>
+                    <p>7天无理由退换货，购物更安心</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="js/common.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

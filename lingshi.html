@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物系统</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        /* 特色区域 */
+        .features {
+            padding: 4rem 0;
+            background: white;
+        }
+
+        .feature-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            display: flex;
+            padding: 2rem;
+            background: #f9f9f9;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: var();
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var();
+            margin-right: 1.5rem;
+        }
+
+        .feature-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+        }
+
+        /* 添加购物动画样式 */
+        .add-to-cart-animation {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+<!-- 顶部导航栏 -->
+<nav class="top-nav">
+    <div class="nav-logo">零食</div>
+    <div class="nav-menu">
+        <a href="main.html" class="active">主页</a>
+        <a href="category.html">分类</a>
+        <a href="promotion.html">促销</a>
+        <a href="help.html">帮助中心</a>
+    </div>
+    <div class="nav-user">
+        <span class="user-welcome">User</span>
+        <a href="index.html" class="logout">退出登录</a>
+    </div>
+</nav>
+<!-- 主要内容区 -->
+<main class="main-content">
+    <!-- 商品展示 -->
+    <div class="products-grid">
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'lingshi1',
+                    name: 'LAY S 乐事',
+                    price: 41.00,
+                    image: 'images/73.jpg',
+                    description: ' 多口味零食组合装多规格 煲剧休闲小零食解馋休闲食品。'
+                })">
+            <img src="images/73.jpg" alt="商品1">
+            <h3>LAY S 乐事</h3>
+            <p class="price">¥41.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'lingshi2',
+                    name: '卫龙',
+                    price: 9.00,
+                    image: 'images/74.jpg',
+                    description: '香辣味魔芋爽180g*1/2/3盒 休闲小吃。'
+                })">
+            <img src="images/74.jpg" alt="商品2">
+            <h3>卫龙</h3>
+            <p class="price">¥9.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'lingshi3',
+                    name: '费列罗 巧克力',
+                    price: 48.00,
+                    image: 'images/75.jpg',
+                    description: '巧克力礼盒312g/盒 225g/盒 精致轻奢氛围感拉满。'
+                })">
+            <img src="images/75.jpg" alt="商品3">
+            <h3>费列罗 巧克力</h3>
+            <p class="price">¥48.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'lingshi4',
+                    name: '士力架',
+                    price: 14.00,
+                    image: 'images/76.jpg',
+                    description: '花生夹心巧克力电池小铁罐10g*12/24/36根 糖果零食抗饥饿能量蓄电。'
+                })">
+            <img src="images/76.jpg" alt="商品4">
+            <h3>士力架</h3>
+            <p class="price">¥76.00</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'lingshi5',
+                    name: '好丽友',
+                    price: 10.40,
+                    image: 'images/77.jpg',
+                    description: '奶香榴莲味派204g*1/2/3盒 西式糕点早餐面包。'
+                })">
+            <img src="images/77.jpg" alt="商品5">
+            <h3>好丽友</h3>
+            <p class="price">¥10.40</p>
+        </div>
+        <div class="product-card" onclick="showProductDetail({
+                    id: 'lingshi6',
+                    name: '格力高 GLICO',
+                    price: 16.00,
+                    image: 'images/78.png',
+                    description: '百醇多口味夹心饼干48g*3盒 注心饼干 休闲零食。'
+                })">
+            <img src="images/78.png" alt="商品6">
+            <h3>好丽友</h3>
+            <p class="price">¥16.00</p>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- 特色区域 -->
+<section class="features">
+    <div class="container">
+        <div class="feature-container">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>快速配送</h3>
+                    <p>全国主要城市次日达，偏远地区72小时内送达</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>正品保障</h3>
+                    <p>所有商品均从品牌官方授权渠道采购，100%正品</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-undo"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>无忧退换</h3>
+                    <p>7天无理由退换货，购物更安心</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="js/common.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

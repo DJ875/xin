@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 购物系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script src="js/config.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <div class="login-left">
+                <img src="images/login-character.jpg.png" alt="Login Character" class="character-image">
+            </div>
+            <div class="login-right">
+                <div class="login-type-selector">
+                    <button onclick="switchLoginType('user')" class="active" id="userLoginBtn">用户登录</button>
+                    <button onclick="switchLoginType('merchant')" id="merchantLoginBtn">商家登录</button>
+                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <input type="text" id="username" placeholder="用户名" required>
+                        <div class="error-message" id="usernameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="password" placeholder="密码" required>
+                        <div class="error-message" id="passwordError"></div>
+                    </div>
+                    <button type="submit" class="login-button">登录</button>
+                </form>
+                <div class="additional-links">
+                    <a href="register.html" id="registerLink">注册新用户</a>
+                    <a href="merchant_register.html" id="merchantRegisterLink" style="display: none;">商家入驻</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/login.js"></script>
+</body>
+</html> 

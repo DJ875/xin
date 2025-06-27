@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商家管理 - 购物系统</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/common.css">
+    <script src="js/config.js"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .dashboard-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .merchant-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .merchant-info h2 {
+            margin: 0 0 10px;
+            color: #333;
+        }
+
+        .merchant-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .info-item label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-item p {
+            margin: 5px 0 0;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .product-management {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-management h2 {
+            margin: 0 0 20px;
+            color: #333;
+        }
+
+        .add-product-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            position: relative;
+        }
+
+        .product-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-btn, .delete-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .edit-btn {
+            color: #4a90e2;
+        }
+
+        .delete-btn {
+            color: #ff6b6b;
+        }
+
+        /* 添加/编辑商品弹窗 */
+        .product-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .image-upload {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .image-upload img {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .modal-buttons button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .cancel-btn {
+            background: #eee;
+            color: #666;
+        }
+
+        /* 销量统计页面 */
+        .sales-container {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .sales-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sales-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+
+        .sales-info {
+            flex: 1;
+        }
+
+        .sales-count {
+            font-size: 20px;
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        /* 商品修改页面 */
+        .edit-products-container {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .edit-product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        /* 折扣商品页面样式 */
+        .discount-container {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* 折扣标签样式 */
+        .discount-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .discounted-price {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="top-nav">
+        <div class="nav-logo">购物系统 - 商家管理</div>
+        <div class="nav-menu">
+            <a href="#" onclick="showSection('products')" class="active" id="productsLink">商品管理</a>
+            <a href="#" onclick="showSection('sales')" id="salesLink">商品销量</a>
+            <a href="#" onclick="showSection('discount')" id="discountLink">折扣商品</a>
+        </div>
+        <div class="nav-user">
+            <span class="merchant-welcome">商家名称</span>
+            <a href="index.html" class="logout">退出登录</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- 商家信息 -->
+        <div class="merchant-info">
+            <h2>商家信息</h2>
+            <div class="merchant-details">
+                <div class="info-item">
+                    <label>商家ID</label>
+                    <p id="merchantId"></p>
+                </div>
+                <div class="info-item">
+                    <label>商家名称</label>
+                    <p id="merchantName"></p>
+                </div>
+                <div class="info-item">
+                    <label>经营类型</label>
+                    <p id="merchantTypes"></p>
+                </div>
+                <div class="info-item">
+                    <label>注册时间</label>
+                    <p id="registerTime"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 商品管理 -->
+        <div id="productsSection" class="product-management">
+            <h2>商品管理</h2>
+            <button class="add-product-btn" onclick="showAddProductModal()">添加新商品</button>
+            <div class="products-grid" id="productsGrid"></div>
+        </div>
+
+        <!-- 销量统计 -->
+        <div id="salesSection" class="sales-container">
+            <h2>商品销量统计</h2>
+            <div id="salesList"></div>
+        </div>
+
+        <!-- 折扣商品 -->
+        <div id="discountSection" class="discount-container">
+            <h2>折扣商品管理</h2>
+            <div id="discountList"></div>
+        </div>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/merchant_dashboard.js"></script>
+</body>
+</html> 

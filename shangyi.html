@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>购物系统</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/common.css">
+  <style>
+    /* 特色区域 */
+    .features {
+      padding: 4rem 0;
+      background: white;
+    }
+
+    .feature-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      display: flex;
+      padding: 2rem;
+      background: #f9f9f9;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      background: var();
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      color: var();
+      margin-right: 1.5rem;
+    }
+
+    .feature-content h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.8rem;
+    }
+
+    /* 添加购物动画样式 */
+    .add-to-cart-animation {
+      position: fixed;
+      width: 30px;
+      height: 30px;
+      background: #ff6b6b;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      pointer-events: none;
+      transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+<!-- 顶部导航栏 -->
+<nav class="top-nav">
+  <div class="nav-logo">上衣</div>
+  <div class="nav-menu">
+    <a href="main.html" class="active">主页</a>
+    <a href="category.html">分类</a>
+    <a href="promotion.html">促销</a>
+    <a href="help.html">帮助中心</a>
+  </div>
+  <div class="nav-user">
+    <span class="user-welcome">User</span>
+    <a href="index.html" class="logout">退出登录</a>
+  </div>
+</nav>
+<!-- 主要内容区 -->
+<main class="main-content">
+  <!-- 商品展示 -->
+  <div class="products-grid">
+    <div class="product-card" onclick="showProductDetail({
+                    id: 'shoes1',
+                    name: 'YUANQ24SS',
+                    price: 124.00,
+                    image: 'images/31.png',
+                    description: '南海岸魔爪画报美式重磅小领口短袖。'
+                })">
+      <img src="images/31.png" alt="商品1">
+      <h3>YUANQ24SS</h3>
+      <p class="price">¥124.00</p>
+    </div>
+    <div class="product-card" onclick="showProductDetail({
+                    id: 'shoees2',
+                    name: '耐克Nike纯棉短袖',
+                    price: 110.00,
+                    image: 'images/32.jpg',
+                    description: '2025新款男士上衣运动跑步圆领T恤白。'
+                })">
+      <img src="images/32.jpg" alt="商品2">
+      <h3>耐克Nike纯棉短袖</h3>
+      <p class="price">¥110.00</p>
+    </div>
+    <div class="product-card" onclick="showProductDetail({
+                    id: 'shoes3',
+                    name: 'Louis Vuitton 路易威登',
+                    price: 198377.44,
+                    image: 'images/33.jpg',
+                    description: '女士飞行员外套。'
+                })">
+      <img src="images/33.jpg" alt="商品3">
+      <h3>Louis Vuitton 路易威登</h3>
+      <p class="price">¥198377.44</p>
+    </div>
+    <div class="product-card" onclick="showProductDetail({
+                    id: 'shoes4',
+                    name: 'NIKE/耐克正品 连帽卫衣',
+                    price: 399.00,
+                    image: 'images/4.jpg',
+                    description: '舒适面料，时尚设计。'
+                })">
+      <img src="images/4.jpg" alt="商品4">
+      <h3>NIKE/耐克正品 连帽卫衣</h3>
+      <p class="price">¥399.00</p>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- 特色区域 -->
+<section class="features">
+  <div class="container">
+    <div class="feature-container">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="feature-content">
+          <h3>快速配送</h3>
+          <p>全国主要城市次日达，偏远地区72小时内送达</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="feature-content">
+          <h3>正品保障</h3>
+          <p>所有商品均从品牌官方授权渠道采购，100%正品</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-undo"></i>
+        </div>
+        <div class="feature-content">
+          <h3>无忧退换</h3>
+          <p>7天无理由退换货，购物更安心</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script src="js/common.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

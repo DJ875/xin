@@ -1,0 +1,133 @@
+// 获取登录用户信息
+document.addEventListener('DOMContentLoaded', function() {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const currentUser = localStorage.getItem('currentUser');
+    const userWelcome = document.querySelector('.user-welcome');
+    const logoutLink = document.querySelector('.logout');
+    
+    if (currentUser) {
+        const user = users.find(u => u.username === currentUser);
+        if (user) {
+            userWelcome.textContent = `欢迎，${user.username}`;
+            logoutLink.textContent = '退出登录';
+        }
+    }
+    
+    // 退出登录
+    logoutLink.addEventListener('click', function(e) {
+        if (currentUser) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    });
+});
+
+// 轮播图功能
+const carousel = {
+    currentSlide: 0,
+    slides: [
+        'images/9.jpg',
+        'images/11.png',
+        'images/12.png'
+    ],
+    init: function() {
+        this.banner = document.querySelector('.banner');
+        this.prevBtn = document.querySelector('.carousel-controls .prev');
+        this.nextBtn = document.querySelector('.carousel-controls .next');
+        
+        this.prevBtn.addEventListener('click', () => this.showSlide('prev'));
+        this.nextBtn.addEventListener('click', () => this.showSlide('next'));
+        
+        // 自动轮播
+        setInterval(() => this.showSlide('next'), 5000);
+    },
+    showSlide: function(direction) {
+        if (direction === 'next') {
+            this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+        } else {
+            this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+        }
+        this.banner.src = this.slides[this.currentSlide];
+    }
+};
+
+// 初始化轮播图
+carousel.init();
+
+// 商品分类点击事件
+document.querySelectorAll('.category-item').forEach(item => {
+    item.addEventListener('click', function() {
+        const category = this.querySelector('span').textContent;
+        // 这里可以添加分类跳转逻辑
+        const categoryUrls = {
+            '服装':'fuzhuang.html',
+            '潮鞋': 'chaoxie.html',
+            '零食': 'lingshi.html',
+            '家具': 'jiaju.html',
+            '电脑外设': 'dnws.html',
+            '手机': 'shouji.html',
+            '数码产品': 'smcp.html',
+            '耳机': 'erji.html',
+            '平板电脑': 'pbdn.html',
+            '电脑': 'diannao.html',
+            '上衣': 'shangyi.html',
+            '裤子': 'kuzi.html',
+            '休闲鞋': 'xie.html',
+            '篮球鞋': 'lqx.html',
+            '家电': 'jiaju.html',
+            '生活用品': 'jiaju.html'
+        };
+
+        // 获取对应分类的URL
+        const targetUrl = categoryUrls[category];
+
+        if (targetUrl) {
+            // 执行页面跳转
+            window.location.href = targetUrl;
+
+            // 控制台日志（实际部署时可移除）
+            console.log(`正在跳转到 ${category} 分类页面: ${targetUrl}`);
+        } else {
+            // 处理未匹配分类的情况
+            console.warn(`未找到 ${category} 分类的跳转路径`);
+
+            // 可选：显示错误提示
+            alert(`抱歉，${category}分类暂不可用`);
+        }
+    });
+
+    // 添加悬停效果提升用户体验
+    item.addEventListener('mouseenter', () => {
+        item.style.transform = 'scale(1.05)';
+        item.style.transition = 'transform 0.3s ease';
+    });
+
+    item.addEventListener('mouseleave', () => {
+        item.style.transform = 'scale(1)';
+    });
+});
+
+// 商品卡片点击事件
+document.querySelectorAll('.product-card').forEach(card => {
+    card.addEventListener('click', function() {
+        const productName = this.querySelector('h3').textContent;
+        // 这里可以添加商品详情页跳转逻辑
+        console.log(`查看${productName}详情`);
+    });
+});
+
+// 搜索功能
+function performSearch() {
+    const keyword = document.getElementById('searchInput').value.trim();
+    if (keyword) {
+        window.location.href = `search.html?keyword=${encodeURIComponent(keyword)}`;
+    }
+}
+
+// 监听回车键
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        performSearch();
+    }
+}); 

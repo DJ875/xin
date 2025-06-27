@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>促销活动 - 购物系统</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        .promotion-header {
+            background: #ff6b6b;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+        .promotion-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .promotion-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .product-info {
+            text-align: center;
+        }
+
+        .product-info h3 {
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .product-info .price {
+            color: #ff6b6b;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .product-info .sales {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .no-sales-notice {
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            margin: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="top-nav">
+        <div class="nav-logo">购物系统</div>
+        <div class="nav-menu">
+            <a href="main.html">主页</a>
+            <a href="category.html">分类</a>
+            <a href="promotion.html" class="active">促销</a>
+            <a href="help.html">帮助中心</a>
+        </div>
+        <div class="nav-user">
+            <span class="user-welcome">User</span>
+            <a href="index.html" class="logout">退出登录</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <main class="main-content" style="width: 100%;">
+            <div class="promotion-header">
+                <h1>商品展示</h1>
+                <p>目前暂无销售数据，商品销量将在有用户购买后实时更新</p>
+            </div>
+
+            <div class="product-list">
+                <div class="product-card" onclick="showProductDetail({
+                    id: 'phone1',
+                    name: 'iPhone 16 Pro MAX',
+                    price: 7999.00,
+                    image: 'images/1.jpg',
+                    description: '最新款iPhone，搭载A18芯片，超强性能。',
+                    sales: 0
+                })">
+                    <img src="images/1.jpg" alt="iPhone">
+                    <div class="product-info">
+                        <h3>iPhone 16 Pro MAX</h3>
+                        <p class="price">¥7999.00</p>
+                        <p class="sales">销量：0</p>
+                    </div>
+                </div>
+
+                <div class="product-card" onclick="showProductDetail({
+                    id: 'laptop1',
+                    name: '超薄笔记本电脑',
+                    price: 5999.00,
+                    image: 'images/14.jpg',
+                    description: '轻薄笔记本，性能强劲，续航持久。',
+                    sales: 0
+                })">
+                    <img src="images/14.jpg" alt="笔记本">
+                    <div class="product-info">
+                        <h3>超薄笔记本电脑</h3>
+                        <p class="price">¥5999.00</p>
+                        <p class="sales">销量：0</p>
+                    </div>
+                </div>
+
+                <div class="product-card" onclick="showProductDetail({
+                    id: 'shoes1',
+                    name: 'Jordan AJ 4',
+                    price: 1099.00,
+                    image: 'images/2.jpg',
+                    description: '经典复刻款，舒适透气。',
+                    sales: 0
+                })">
+                    <img src="images/2.jpg" alt="运动鞋">
+                    <div class="product-info">
+                        <h3>Jordan AJ 4</h3>
+                        <p class="price">¥1099.00</p>
+                        <p class="sales">销量：0</p>
+                    </div>
+                </div>
+
+                <div class="product-card" onclick="showProductDetail({
+                    id: 'fridge1',
+                    name: '智能冰箱',
+                    price: 11790.00,
+                    image: 'images/6.jpg',
+                    description: '大容量智能冰箱，温度智能调节。',
+                    sales: 0
+                })">
+                    <img src="images/6.jpg" alt="冰箱">
+                    <div class="product-info">
+                        <h3>智能冰箱</h3>
+                        <p class="price">¥11790.00</p>
+                        <p class="sales">销量：0</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/common.js"></script>
+</body>
+</html> 

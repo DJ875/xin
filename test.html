@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>LeanCloud 连接测试</title>
+</head>
+<body>
+    <h1>LeanCloud 连接测试</h1>
+    <div id="result"></div>
+
+    <!-- 引入 LeanCloud SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-live-query-min.js"></script>
+    
+    <script>
+        // LeanCloud 配置
+        const appId = 'MUcdt9CloFW8yPC38kmZPHhN-gzGzoHsz';
+        const appKey = 'GJ9AlliMtPzYwsVTJDjRyKkg';
+        const serverURL = 'https://mucdt9cl.lc-cn-n1-shared.com';
+
+        // 初始化
+        AV.init({ appId, appKey, serverURL });
+
+        // 测试连接
+        async function testConnection() {
+            try {
+                const TestObject = AV.Object.extend('TestObject');
+                const testObject = new TestObject();
+                testObject.set('words', 'Hello world!');
+                await testObject.save();
+                
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: green;">连接成功！数据已保存到 LeanCloud</p>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: red;">连接失败：' + error.message + '</p>';
+            }
+        }
+
+        // 执行测试
+        testConnection();
+    </script>
+</body>
+</html> 

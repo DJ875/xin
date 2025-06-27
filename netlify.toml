@@ -1,0 +1,13 @@
+[build]
+  base = "."
+  publish = "."
+  command = "npm install && npm run build"
+  
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild" 
