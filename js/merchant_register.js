@@ -68,7 +68,36 @@ function netlifyMerchantSignup() {
         return;
     }
     
-    // 使用Netlify Identity Widget的modal
+    // 配置Netlify Identity
+    window.netlifyIdentity.init({
+        locale: 'zh' // 设置中文语言
+    });
+
+    // 注册事件监听
+    window.netlifyIdentity.on('signup', user => {
+        // 注册成功后的处理
+        console.log('注册成功:', user);
+        // 添加商家信息
+        user.updateProfile({
+            data: {
+                businessName: businessName,
+                userType: 'merchant'
+            }
+        }).then(() => {
+            alert('商家注册成功！');
+            window.location.href = 'index.html';
+        }).catch(error => {
+            console.error('更新用户信息失败:', error);
+            showError('usernameError', '注册成功但更新商家信息失败');
+        });
+    });
+
+    window.netlifyIdentity.on('error', err => {
+        console.error('Netlify Identity错误:', err);
+        showError('usernameError', '注册失败: ' + err.message);
+    });
+
+    // 打开注册窗口
     window.netlifyIdentity.open('signup');
 }
 
