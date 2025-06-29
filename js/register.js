@@ -66,6 +66,38 @@ function netlifySignup() {
         return;
     }
     
+    // 设置标记，表示这是从注册页面来的
+    sessionStorage.setItem('fromRegister', 'true');
+    
+    // 配置Netlify Identity
+    window.netlifyIdentity.init({
+        locale: 'zh'
+    });
+
+    // 注册事件监听
+    window.netlifyIdentity.on('signup', user => {
+        // 注册成功后的处理
+        console.log('注册成功:', user);
+        // 添加用户类型信息
+        user.updateProfile({
+            data: {
+                userType: 'user'
+            }
+        }).then(() => {
+            alert('注册成功！');
+            window.location.href = 'index.html';
+        }).catch(error => {
+            console.error('更新用户信息失败:', error);
+            showError('usernameError', '注册成功但更新用户信息失败');
+        });
+    });
+
+    window.netlifyIdentity.on('error', err => {
+        console.error('Netlify Identity错误:', err);
+        showError('usernameError', '注册失败: ' + err.message);
+        sessionStorage.removeItem('fromRegister');
+    });
+    
     // 使用Netlify Identity Widget的modal
     window.netlifyIdentity.open('signup');
 }

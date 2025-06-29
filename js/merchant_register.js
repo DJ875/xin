@@ -68,6 +68,9 @@ function netlifyMerchantSignup() {
         return;
     }
     
+    // 设置标记，表示这是从注册页面来的
+    sessionStorage.setItem('fromRegister', 'true');
+    
     // 配置Netlify Identity
     window.netlifyIdentity.init({
         locale: 'zh' // 设置中文语言
@@ -89,12 +92,14 @@ function netlifyMerchantSignup() {
         }).catch(error => {
             console.error('更新用户信息失败:', error);
             showError('usernameError', '注册成功但更新商家信息失败');
+            sessionStorage.removeItem('fromRegister');
         });
     });
 
     window.netlifyIdentity.on('error', err => {
         console.error('Netlify Identity错误:', err);
         showError('usernameError', '注册失败: ' + err.message);
+        sessionStorage.removeItem('fromRegister');
     });
 
     // 打开注册窗口

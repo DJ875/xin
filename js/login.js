@@ -23,11 +23,32 @@ function switchLoginType(type) {
 // 初始化Netlify Identity
 if (window.netlifyIdentity) {
     window.netlifyIdentity.on("init", user => {
-        if (user) {
-            // 如果已登录，根据用户类型跳转
-            const userType = user.user_metadata.type || 'user';
-            redirectToHome(userType);
+        if (!user) {
+            // 未登录状态，不做跳转
+            return;
         }
+        
+        // 检查是否是从注册页面跳转来的
+        const isFromRegister = sessionStorage.getItem('fromRegister');
+        if (isFromRegister) {
+            sessionStorage.removeItem('fromRegister');
+            return;
+        }
+
+        // 如果已登录，根据用户类型跳转
+        const userType = user.user_metadata.type || 'user';
+        redirectToHome(userType);
+    });
+
+    // 添加登录成功事件监听
+    window.netlifyIdentity.on("login", user => {
+        const userType = user.user_metadata.type || 'user';
+        // 设置用户信息到localStorage
+        localStorage.setItem('userInfo', JSON.stringify({
+            username: user.email,
+            userType: userType
+        }));
+        redirectToHome(userType);
     });
 }
 
