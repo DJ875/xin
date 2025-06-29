@@ -23,8 +23,17 @@ function switchLoginType(type) {
 // 初始化Netlify Identity
 if (window.netlifyIdentity) {
     window.netlifyIdentity.on("init", user => {
+        // 检查是否正在退出
+        const isLoggingOut = sessionStorage.getItem('isLoggingOut');
+        if (isLoggingOut) {
+            sessionStorage.removeItem('isLoggingOut');
+            return;
+        }
+
         if (!user) {
-            // 未登录状态，不做跳转
+            // 未登录状态，清除所有存储的登录信息
+            localStorage.removeItem('userInfo');
+            sessionStorage.removeItem('fromRegister');
             return;
         }
         
@@ -36,20 +45,41 @@ if (window.netlifyIdentity) {
         }
 
         // 如果已登录，根据用户类型跳转
-        const userType = user.user_metadata.type || 'user';
+        const userType = user.user_metadata?.type || 'user';
         redirectToHome(userType);
     });
 
     // 添加登录成功事件监听
     window.netlifyIdentity.on("login", user => {
-        const userType = user.user_metadata.type || 'user';
+        const userType = user.user_metadata?.type || 'user';
         // 设置用户信息到localStorage
         localStorage.setItem('userInfo', JSON.stringify({
             username: user.email,
-            userType: userType
+            userType: userType,
+            userId: user.id
         }));
         redirectToHome(userType);
     });
+
+    // 添加退出事件监听
+    window.netlifyIdentity.on("logout", () => {
+        console.log("用户退出");
+        sessionStorage.setItem('isLoggingOut', 'true');
+        localStorage.removeItem('userInfo');
+        window.location.href = 'index.html';
+    });
+}
+
+// 添加退出函数
+function logout() {
+    if (window.netlifyIdentity) {
+        sessionStorage.setItem('isLoggingOut', 'true');
+        window.netlifyIdentity.logout();
+    } else {
+        // 本地登录的退出处理
+        localStorage.removeItem('userInfo');
+        window.location.href = 'index.html';
+    }
 }
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
