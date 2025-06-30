@@ -1,22 +1,23 @@
 {
   "name": "shopping-system",
   "version": "1.0.0",
-  "description": "购物系统",
+  "description": "动态购物系统",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "netlify-lambda build netlify/functions"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
     "express": "^4.17.1",
-    "mysql2": "^2.3.3",
-    "serverless-http": "^3.1.1"
+    "mongoose": "^6.0.12",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "body-parser": "^1.19.0",
+    "jsonwebtoken": "^8.5.1",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
-    "netlify-lambda": "^2.0.15"
+    "nodemon": "^2.0.15"
   },
   "keywords": [],
   "author": "",

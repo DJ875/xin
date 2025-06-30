@@ -22,6 +22,9 @@ function switchLoginType(type) {
 
 // 初始化Netlify Identity
 if (window.netlifyIdentity) {
+    // 检查当前页面是否是登录页面
+    const isLoginPage = window.location.pathname.includes('index.html');
+    
     window.netlifyIdentity.on("init", user => {
         // 检查是否正在退出
         const isLoggingOut = sessionStorage.getItem('isLoggingOut');
@@ -34,6 +37,9 @@ if (window.netlifyIdentity) {
             // 未登录状态，清除所有存储的登录信息
             localStorage.removeItem('userInfo');
             sessionStorage.removeItem('fromRegister');
+            if (!isLoginPage) {
+                window.location.href = 'index.html';
+            }
             return;
         }
         
@@ -44,9 +50,11 @@ if (window.netlifyIdentity) {
             return;
         }
 
-        // 如果已登录，根据用户类型跳转
-        const userType = user.user_metadata?.type || 'user';
-        redirectToHome(userType);
+        // 如果已登录且在登录页面，则跳转到相应页面
+        if (isLoginPage) {
+            const userType = user.user_metadata?.type || 'user';
+            redirectToHome(userType);
+        }
     });
 
     // 添加登录成功事件监听
@@ -162,11 +170,14 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
+// 重定向到主页
 function redirectToHome(userType) {
-    if (userType === 'merchant') {
-        window.location.href = 'merchant_dashboard.html';
-    } else {
-        window.location.href = 'main.html';
+    // 防止重复跳转
+    const currentPage = window.location.pathname;
+    const targetPage = userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
+    
+    if (!currentPage.includes(targetPage)) {
+        window.location.href = targetPage;
     }
 }
 

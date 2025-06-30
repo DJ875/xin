@@ -247,6 +247,34 @@ router.get('/products', async (req, res) => {
     }
 });
 
+// 添加购物车API端点
+exports.handler = async function(event, context) {
+    if (event.path === '/.netlify/functions/api/cart') {
+        try {
+            // 从请求中获取购物车数据
+            const cartData = JSON.parse(event.body);
+            return {
+                statusCode: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+                },
+                body: JSON.stringify({
+                    items: cartData.items,
+                    total: cartData.total,
+                    itemCount: cartData.items.length
+                })
+            };
+        } catch (error) {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: '服务器错误' })
+            };
+        }
+    }
+};
+
 app.use('/.netlify/functions/api', router);
 
 // 导出serverless handler

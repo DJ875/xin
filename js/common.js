@@ -85,7 +85,7 @@ class ShoppingCart {
         localStorage.setItem('cartItems', JSON.stringify(this.items));
     }
 
-    updateCartDisplay() {
+    async updateCartDisplay() {
         const cartItems = document.getElementById('cartItems');
         const cartTotal = document.getElementById('cartTotal');
         
@@ -107,6 +107,31 @@ class ShoppingCart {
 
         const total = this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         cartTotal.textContent = total.toFixed(2);
+
+        // 同步购物车数据到ESP32
+        await this.syncToESP32(total);
+    }
+
+    async syncToESP32(total) {
+        try {
+            const response = await fetch('/.netlify/functions/api/cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    items: this.items,
+                    total: total,
+                    itemCount: this.items.length
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('同步失败');
+            }
+        } catch (error) {
+            console.error('同步到ESP32失败:', error);
+        }
     }
 }
 
