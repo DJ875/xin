@@ -21,62 +21,52 @@ function switchLoginType(type) {
 }
 
 // 本地登录处理
-document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            clearErrors();
-            
-            if (!username || !password) {
-                if (!username) showError('usernameError', '请输入用户名');
-                if (!password) showError('passwordError', '请输入密码');
-                return;
-            }
-            
-            try {
-                // 使用配置的API进行登录
-                const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username,
-                        password,
-                        userType: currentLoginType
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.message || '登录失败');
-                }
-                
-                if (data.success) {
-                    localStorage.setItem('userInfo', JSON.stringify({
-                        ...data.user,
-                        loginType: 'local'
-                    }));
-                    
-                    // 根据用户类型跳转
-                    window.location.href = data.user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
-                }
-            } catch (error) {
-                console.error('登录错误:', error);
-                showError('loginError', error.message || '登录失败，请稍后重试');
-            }
-        });
+function localLogin() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    clearErrors();
+    
+    if (!username || !password) {
+        if (!username) showError('usernameError', '请输入用户名');
+        if (!password) showError('passwordError', '请输入密码');
+        return;
     }
     
-    // 初始化登录类型
-    switchLoginType('user');
-});
+    // 使用配置的API进行登录
+    fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username,
+            password,
+            userType: currentLoginType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 保存用户信息和登录时间
+            const loginInfo = {
+                ...data.user,
+                loginType: 'local',
+                loginTime: new Date().getTime()
+            };
+            localStorage.setItem('userInfo', JSON.stringify(loginInfo));
+            
+            // 根据用户类型跳转
+            window.location.href = data.user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
+        } else {
+            throw new Error(data.message || '登录失败');
+        }
+    })
+    .catch(error => {
+        console.error('登录错误:', error);
+        showError('loginError', error.message || '登录失败，请稍后重试');
+    });
+}
 
 // Netlify登录处理
 function netlifyLogin() {
@@ -127,12 +117,14 @@ function netlifyLogin() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                localStorage.setItem('userInfo', JSON.stringify({
+                // 保存用户信息和登录时间
+                const loginInfo = {
                     ...data.user,
                     loginType: 'netlify',
                     netlifyToken: user.token.access_token,
                     loginTime: new Date().getTime()
-                }));
+                };
+                localStorage.setItem('userInfo', JSON.stringify(loginInfo));
                 
                 // 根据用户类型跳转
                 window.location.href = userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
@@ -158,15 +150,27 @@ function netlifyLogin() {
 
 // 退出登录
 function logout() {
+    // 获取用户信息
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     
-    if (userInfo.loginType === 'netlify' && window.netlifyIdentity) {
-        window.netlifyIdentity.logout();
+    // 如果是Netlify用户，先退出Netlify
+    if (userInfo.loginType === 'netlify') {
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.logout();
+        }
     }
     
-    localStorage.removeItem('userInfo');
-    sessionStorage.removeItem('loginType');
-    window.location.href = 'index.html';
+    // 清除所有存储的信息
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // 强制清除Netlify Identity的cookie
+    document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    
+    // 重定向到登录页面
+    window.location.replace('index.html');
 }
 
 function showError(elementId, message) {
@@ -207,20 +211,25 @@ function checkLoginStatus() {
 document.addEventListener('DOMContentLoaded', () => {
     // 获取当前页面路径
     const currentPath = window.location.pathname;
+    const isLoginPage = currentPath.includes('index.html') || currentPath.endsWith('/');
     
-    // 如果不是登录页面，才检查登录状态并重定向
-    if (!currentPath.includes('index.html') && !currentPath.endsWith('/')) {
-        if (!checkLoginStatus()) {
-            window.location.href = 'index.html';
+    // 如果是登录页面
+    if (isLoginPage) {
+        // 如果已登录且登录未过期，跳转到对应页面
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo && checkLoginStatus()) {
+            const user = JSON.parse(userInfo);
+            window.location.replace(user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html');
         }
     } else {
-        // 如果是登录页面且用户已登录，直接跳转到对应页面
-        const userInfo = localStorage.getItem('userInfo');
-        if (userInfo) {
-            const user = JSON.parse(userInfo);
-            if (checkLoginStatus()) {
-                window.location.href = user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
-            }
+        // 如果不是登录页面且未登录或登录已过期，跳转到登录页面
+        if (!checkLoginStatus()) {
+            window.location.replace('index.html');
         }
+    }
+    
+    // 初始化登录类型
+    if (isLoginPage) {
+        switchLoginType('user');
     }
 }); 

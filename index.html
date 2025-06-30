@@ -10,16 +10,16 @@
 </head>
 <body>
     <div class="container">
-        <div class="login-box">
+        <div class="login-container">
             <div class="login-left">
-                <img src="images/login-character.jpg.png" alt="Login Character" class="character-image">
+                <img src="images/login-character.jpg.png" alt="Login Character" class="login-image">
             </div>
             <div class="login-right">
-                <div class="login-type-selector">
-                    <button onclick="switchLoginType('user')" class="active" id="userLoginBtn">用户登录</button>
-                    <button onclick="switchLoginType('merchant')" id="merchantLoginBtn">商家登录</button>
+                <div class="login-header">
+                    <button onclick="switchLoginType('user')" class="login-tab active" id="userLoginBtn">用户登录</button>
+                    <button onclick="switchLoginType('merchant')" class="login-tab" id="merchantLoginBtn">商家登录</button>
                 </div>
-                <form id="loginForm">
+                <div class="login-form">
                     <div class="form-group">
                         <input type="text" id="username" placeholder="用户名" required>
                         <div class="error-message" id="usernameError"></div>
@@ -30,13 +30,13 @@
                     </div>
                     <div class="error-message" id="loginError"></div>
                     <div class="login-buttons">
-                        <button type="submit" class="login-button">本地登录</button>
-                        <button type="button" onclick="netlifyLogin()" class="login-button netlify-button">Netlify登录</button>
+                        <button type="button" onclick="localLogin()" class="login-button gradient-button">本地登录</button>
+                        <button type="button" onclick="netlifyLogin()" class="login-button gradient-button">Netlify登录</button>
                     </div>
-                </form>
-                <div class="additional-links">
-                    <a href="register.html" id="registerLink">注册新用户</a>
-                    <a href="merchant_register.html" id="merchantRegisterLink" style="display: none;">商家入驻</a>
+                    <div class="register-links">
+                        <a href="register.html" id="registerLink" class="register-link">注册新用户</a>
+                        <a href="merchant_register.html" id="merchantRegisterLink" class="register-link" style="display: none;">商家入驻</a>
+                    </div>
                 </div>
             </div>
         </div>
