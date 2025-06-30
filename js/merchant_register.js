@@ -49,86 +49,98 @@ document.getElementById('merchantRegisterForm').addEventListener('submit', async
     }
 });
 
-// Netlify商家注册
-function netlifySignup() {
-    // 获取表单数据
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+// Netlify注册处理
+function netlifyRegister() {
+    // 获取商家名称
     const businessName = document.getElementById('businessName').value;
-    
-    // 重置错误信息
-    clearErrors();
-    
-    // 表单验证
-    if (!validateForm(username, password, confirmPassword, businessName)) {
+    if (!businessName) {
+        showMessage('请输入商家名称', 'error');
         return;
     }
-    
-    // 设置商家注册信息
-    sessionStorage.setItem('registration', JSON.stringify({
-        userType: 'merchant',
-        businessName,
-        registrationTime: new Date().getTime()
-    }));
-    
-    // 配置Netlify Identity
+
+    // 初始化Netlify Identity
     window.netlifyIdentity.init({
         locale: 'zh'
     });
 
-    // 注册事件监听
-    window.netlifyIdentity.on('signup', user => {
-        // 获取商家注册信息
-        const merchantInfo = JSON.parse(sessionStorage.getItem('registration') || '{}');
-        
-        // 添加商家信息
-        user.updateProfile({
-            data: {
-                type: 'merchant',
-                businessName: merchantInfo.businessName
+    // 配置Netlify Identity Widget
+    const container = document.querySelector('#netlify-modal') || document.body;
+    window.netlifyIdentity.setConfig({
+        locale: 'zh',
+        container: container,
+        theme: {
+            mode: 'light',
+            logo: 'images/merchant-logo.png',
+            title: '商家注册',
+            labels: {
+                login: '商家登录',
+                signup: '商家注册',
+                email: '邮箱',
+                password: '密码',
+                button: '确定'
             }
-        }).then(() => {
-            // 使用Netlify API注册商家
-            return fetch('/.netlify/functions/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: user.email,
-                    userType: 'merchant',
-                    businessName: merchantInfo.businessName
-                })
-            });
-        }).then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Netlify商家注册成功！');
-                // 清除临时数据
-                sessionStorage.removeItem('registration');
-                window.location.href = 'index.html';
-            } else {
-                throw new Error(data.message || '商家信息注册失败');
-            }
-        }).catch(error => {
-            console.error('注册商家信息失败:', error);
-            showError('registerError', '注册失败: ' + error.message);
-            // 清除临时数据
-            sessionStorage.removeItem('registration');
-            // 删除Netlify用户
-            user.delete().catch(console.error);
-        });
-    });
-
-    window.netlifyIdentity.on('error', err => {
-        console.error('Netlify Identity错误:', err);
-        showError('registerError', '注册失败: ' + err.message);
-        sessionStorage.removeItem('registration');
+        }
     });
     
-    // 打开Netlify注册窗口
+    // 保存商家名称
+    sessionStorage.setItem('businessName', businessName);
+    
+    // 监听注册事件
+    window.netlifyIdentity.on('signup', user => {
+        showMessage('注册成功，请查收邮件并确认注册', 'success');
+    });
+
+    // 监听确认事件
+    window.netlifyIdentity.on('confirm', user => {
+        const businessName = sessionStorage.getItem('businessName');
+        
+        // 注册到本地系统
+        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: user.email,
+                userType: 'merchant',
+                businessName: businessName,
+                netlifyToken: user.token.access_token
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 清除临时数据
+                sessionStorage.removeItem('businessName');
+                
+                showMessage('注册成功，即将跳转到登录页面...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            } else {
+                throw new Error(data.message || '注册失败');
+            }
+        })
+        .catch(error => {
+            console.error('注册错误:', error);
+            showMessage(error.message || '注册失败，请稍后重试', 'error');
+            // 清除临时数据
+            sessionStorage.removeItem('businessName');
+        });
+    });
+    
+    // 打开注册窗口
     window.netlifyIdentity.open('signup');
+}
+
+// 显示消息
+function showMessage(message, type = 'error') {
+    const messageElement = document.getElementById('message');
+    if (messageElement) {
+        messageElement.textContent = message;
+        messageElement.className = `message ${type}`;
+        messageElement.style.display = 'block';
+    }
 }
 
 function validateForm(username, password, confirmPassword, businessName) {

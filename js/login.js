@@ -87,6 +87,25 @@ function netlifyLogin() {
     window.netlifyIdentity.init({
         locale: 'zh'
     });
+
+    // 配置Netlify Identity Widget
+    const container = document.querySelector('#netlify-modal') || document.body;
+    window.netlifyIdentity.setConfig({
+        locale: 'zh',
+        container: container,
+        theme: {
+            mode: 'light',
+            logo: currentLoginType === 'merchant' ? 'images/merchant-logo.png' : 'images/user-logo.png',
+            title: currentLoginType === 'merchant' ? '商家登录' : '用户登录',
+            labels: {
+                login: currentLoginType === 'merchant' ? '商家登录' : '用户登录',
+                signup: currentLoginType === 'merchant' ? '商家注册' : '用户注册',
+                email: '邮箱',
+                password: '密码',
+                button: '确定'
+            }
+        }
+    });
     
     // 监听登录事件
     window.netlifyIdentity.on('login', user => {
@@ -111,7 +130,8 @@ function netlifyLogin() {
                 localStorage.setItem('userInfo', JSON.stringify({
                     ...data.user,
                     loginType: 'netlify',
-                    netlifyToken: user.token.access_token
+                    netlifyToken: user.token.access_token,
+                    loginTime: new Date().getTime()
                 }));
                 
                 // 根据用户类型跳转
@@ -126,9 +146,14 @@ function netlifyLogin() {
             window.netlifyIdentity.logout();
         });
     });
+
+    // 监听注册事件
+    window.netlifyIdentity.on('signup', user => {
+        showError('loginError', '注册成功，请查收邮件并确认注册');
+    });
     
     // 打开Netlify登录窗口
-    window.netlifyIdentity.open('login');
+    window.netlifyIdentity.open();
 }
 
 // 退出登录

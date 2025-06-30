@@ -48,77 +48,68 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 });
 
 // Netlify注册
-function netlifySignup() {
-    // 获取表单数据
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    // 重置错误信息
-    clearErrors();
-    
-    // 表单验证
-    if (!validateForm(username, password, confirmPassword)) {
-        return;
-    }
-    
-    // 设置注册信息
-    sessionStorage.setItem('registration', JSON.stringify({
-        userType: 'user',  // 用户注册页面默认为普通用户
-        registrationTime: new Date().getTime()
-    }));
-    
-    // 配置Netlify Identity
+function netlifyRegister() {
+    // 初始化Netlify Identity
     window.netlifyIdentity.init({
         locale: 'zh'
     });
 
-    // 注册事件监听
-    window.netlifyIdentity.on('signup', user => {
-        // 添加用户信息
-        user.updateProfile({
-            data: {
-                type: 'user'  // 用户注册页面默认为普通用户
+    // 配置Netlify Identity Widget
+    const container = document.querySelector('#netlify-modal') || document.body;
+    window.netlifyIdentity.setConfig({
+        locale: 'zh',
+        container: container,
+        theme: {
+            mode: 'light',
+            logo: 'images/user-logo.png',
+            title: '用户注册',
+            labels: {
+                login: '用户登录',
+                signup: '用户注册',
+                email: '邮箱',
+                password: '密码',
+                button: '确定'
             }
-        }).then(() => {
-            // 使用Netlify API注册用户
-            return fetch('/.netlify/functions/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: user.email,
-                    userType: 'user'
-                })
-            });
-        }).then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Netlify注册成功！');
-                // 清除临时数据
-                sessionStorage.removeItem('registration');
-                window.location.href = 'index.html';
-            } else {
-                throw new Error(data.message || '用户信息注册失败');
-            }
-        }).catch(error => {
-            console.error('注册用户信息失败:', error);
-            showError('registerError', '注册失败: ' + error.message);
-            // 清除临时数据
-            sessionStorage.removeItem('registration');
-            // 删除Netlify用户
-            user.delete().catch(console.error);
-        });
-    });
-
-    window.netlifyIdentity.on('error', err => {
-        console.error('Netlify Identity错误:', err);
-        showError('registerError', '注册失败: ' + err.message);
-        sessionStorage.removeItem('registration');
+        }
     });
     
-    // 打开Netlify注册窗口
+    // 监听注册事件
+    window.netlifyIdentity.on('signup', user => {
+        showMessage('注册成功，请查收邮件并确认注册', 'success');
+    });
+
+    // 监听确认事件
+    window.netlifyIdentity.on('confirm', user => {
+        // 注册到本地系统
+        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: user.email,
+                userType: 'user',
+                netlifyToken: user.token.access_token
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('注册成功，即将跳转到登录页面...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            } else {
+                throw new Error(data.message || '注册失败');
+            }
+        })
+        .catch(error => {
+            console.error('注册错误:', error);
+            showMessage(error.message || '注册失败，请稍后重试', 'error');
+        });
+    });
+    
+    // 打开注册窗口
     window.netlifyIdentity.open('signup');
 }
 
@@ -160,4 +151,15 @@ function clearErrors() {
         element.textContent = '';
         element.style.display = 'none';
     });
+}
+
+// 显示消息
+function showMessage(message, type = 'error') {
+    const messageElement = document.getElementById('message');
+    if (messageElement) {
+        messageElement.textContent = message;
+        messageElement.className = `message ${type}`;
+        messageElement.style.display = 'block';
+    }
+} 
 } 
