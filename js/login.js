@@ -39,8 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             try {
-                // 使用本地API进行登录
-                const response = await fetch('http://localhost:3000/api/login', {
+                // 使用配置的API进行登录
+                const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -73,6 +73,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // 初始化登录类型
+    switchLoginType('user');
 });
 
 // Netlify登录处理
@@ -90,15 +93,16 @@ function netlifyLogin() {
         // 获取用户类型
         const userType = sessionStorage.getItem('loginType') || 'user';
         
-        // 使用Netlify API验证用户
-        fetch('/.netlify/functions/api/login', {
+        // 使用配置的API验证用户
+        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 username: user.email,
-                userType: userType
+                userType: userType,
+                netlifyToken: user.token.access_token
             })
         })
         .then(response => response.json())

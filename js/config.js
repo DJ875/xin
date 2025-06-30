@@ -1,7 +1,9 @@
 // API配置
 const API_CONFIG = {
-    // Netlify API配置
-    BASE_URL: '/.netlify/functions/api',
+    // 根据当前环境自动选择API基础URL
+    BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/api'
+        : '/.netlify/functions/api',
     ENDPOINTS: {
         LOGIN: '/login',
         REGISTER: '/register',

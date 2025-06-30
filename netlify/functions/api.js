@@ -4,6 +4,7 @@ const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const fetch = require('node-fetch');
 
 const app = express();
 
@@ -35,13 +36,33 @@ const promisePool = pool.promise();
 // API路由
 const router = express.Router();
 
+// 验证Netlify Identity Token
+async function verifyNetlifyToken(token) {
+    try {
+        const response = await fetch('https://api.netlify.com/api/v1/user', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Invalid token');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Netlify token验证错误:', error);
+        return null;
+    }
+}
+
 // 用户注册
 router.post('/register', async (req, res) => {
     try {
         console.log('收到注册请求:', req.body);
-        const { username, password, userType, businessName } = req.body;
+        const { username, password, userType, businessName, netlifyToken } = req.body;
         
-        if (!username || !password || !userType) {
+        if (!username || (!password && !netlifyToken) || !userType) {
             return res.status(400).json({ message: '请提供所有必需的信息' });
         }
 
@@ -63,13 +84,23 @@ router.post('/register', async (req, res) => {
         await promisePool.query('START TRANSACTION');
         
         try {
-            // 密码加密
-            const hashedPassword = await bcrypt.hash(password, 10);
+            let hashedPassword = null;
+            
+            // 如果是Netlify登录，验证token
+            if (netlifyToken) {
+                const netlifyUser = await verifyNetlifyToken(netlifyToken);
+                if (!netlifyUser) {
+                    throw new Error('Invalid Netlify token');
+                }
+            } else {
+                // 本地登录，加密密码
+                hashedPassword = await bcrypt.hash(password, 10);
+            }
             
             // 插入用户数据
             const [userResult] = await promisePool.query(
-                'INSERT INTO users (username, password, user_type) VALUES (?, ?, ?)',
-                [username, hashedPassword, userType]
+                'INSERT INTO users (username, password, user_type, is_netlify_user) VALUES (?, ?, ?, ?)',
+                [username, hashedPassword, userType, netlifyToken ? 1 : 0]
             );
             
             // 如果是商家，还需要插入商家信息
@@ -106,11 +137,11 @@ router.post('/register', async (req, res) => {
 // 用户登录
 router.post('/login', async (req, res) => {
     try {
-        const { username, password, userType } = req.body;
+        const { username, password, userType, netlifyToken } = req.body;
         
         // 获取用户信息
         const [users] = await promisePool.query(
-            'SELECT id, username, password, user_type FROM users WHERE username = ?',
+            'SELECT id, username, password, user_type, is_netlify_user FROM users WHERE username = ?',
             [username]
         );
         
@@ -129,10 +160,23 @@ router.post('/login', async (req, res) => {
             });
         }
         
-        // 验证密码
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) {
-            return res.status(401).json({ message: '密码错误' });
+        // 根据登录方式验证
+        if (netlifyToken) {
+            // Netlify登录
+            const netlifyUser = await verifyNetlifyToken(netlifyToken);
+            if (!netlifyUser) {
+                return res.status(401).json({ message: 'Netlify验证失败' });
+            }
+        } else {
+            // 本地登录
+            if (!user.password) {
+                return res.status(401).json({ message: '此账号使用Netlify登录，请选择Netlify登录方式' });
+            }
+            
+            const passwordMatch = await bcrypt.compare(password, user.password);
+            if (!passwordMatch) {
+                return res.status(401).json({ message: '密码错误' });
+            }
         }
         
         // 如果是商家，获取商家信息
@@ -154,6 +198,7 @@ router.post('/login', async (req, res) => {
                 id: user.id,
                 username: user.username,
                 userType: user.user_type,
+                isNetlifyUser: user.is_netlify_user === 1,
                 ...(merchantInfo && { 
                     businessName: merchantInfo.business_name,
                     merchantId: merchantInfo.id
