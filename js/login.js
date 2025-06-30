@@ -23,13 +23,15 @@ function switchLoginType(type) {
 // 初始化Netlify Identity
 if (window.netlifyIdentity) {
     // 检查当前页面是否是登录页面
-    const isLoginPage = window.location.pathname.includes('index.html');
+    const isLoginPage = window.location.pathname.includes('index.html') || window.location.pathname === '/';
     
     window.netlifyIdentity.on("init", user => {
         // 检查是否正在退出
         const isLoggingOut = sessionStorage.getItem('isLoggingOut');
         if (isLoggingOut) {
             sessionStorage.removeItem('isLoggingOut');
+            localStorage.removeItem('userInfo');
+            window.netlifyIdentity.signout();
             return;
         }
 
@@ -64,7 +66,8 @@ if (window.netlifyIdentity) {
         localStorage.setItem('userInfo', JSON.stringify({
             username: user.email,
             userType: userType,
-            userId: user.id
+            userId: user.id,
+            loginTime: new Date().getTime()
         }));
         redirectToHome(userType);
     });
@@ -74,7 +77,11 @@ if (window.netlifyIdentity) {
         console.log("用户退出");
         sessionStorage.setItem('isLoggingOut', 'true');
         localStorage.removeItem('userInfo');
-        window.location.href = 'index.html';
+        // 确保清除Netlify Identity的状态
+        window.netlifyIdentity.logout();
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 100);
     });
 }
 
@@ -82,6 +89,10 @@ if (window.netlifyIdentity) {
 function logout() {
     if (window.netlifyIdentity) {
         sessionStorage.setItem('isLoggingOut', 'true');
+        // 先清除本地存储
+        localStorage.removeItem('userInfo');
+        sessionStorage.removeItem('fromRegister');
+        // 然后调用Netlify退出
         window.netlifyIdentity.logout();
     } else {
         // 本地登录的退出处理
@@ -177,7 +188,10 @@ function redirectToHome(userType) {
     const targetPage = userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
     
     if (!currentPage.includes(targetPage)) {
-        window.location.href = targetPage;
+        // 添加延时确保状态已经完全更新
+        setTimeout(() => {
+            window.location.href = targetPage;
+        }, 100);
     }
 }
 
@@ -188,4 +202,29 @@ function showError(elementId, message) {
 function clearErrors() {
     document.getElementById('usernameError').textContent = '';
     document.getElementById('passwordError').textContent = '';
-} 
+}
+
+// 检查登录状态
+function checkLoginStatus() {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+        const user = JSON.parse(userInfo);
+        const loginTime = user.loginTime;
+        const currentTime = new Date().getTime();
+        
+        // 如果登录时间超过24小时，自动登出
+        if (currentTime - loginTime > 24 * 60 * 60 * 1000) {
+            logout();
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+// 页面加载时检查登录状态
+document.addEventListener('DOMContentLoaded', () => {
+    if (!checkLoginStatus() && !window.location.pathname.includes('index.html')) {
+        window.location.href = 'index.html';
+    }
+}); 
