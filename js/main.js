@@ -1,25 +1,14 @@
 // 获取登录用户信息
 document.addEventListener('DOMContentLoaded', function() {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const currentUser = localStorage.getItem('currentUser');
+    const userInfo = localStorage.getItem('userInfo');
     const userWelcome = document.querySelector('.user-welcome');
     const logoutLink = document.querySelector('.logout');
     
-    if (currentUser && userWelcome && logoutLink) {
-        const user = users.find(u => u.username === currentUser);
+    if (userInfo && userWelcome && logoutLink) {
+        const user = JSON.parse(userInfo);
         if (user) {
             userWelcome.textContent = `欢迎，${user.username}`;
-            logoutLink.textContent = '退出登录';
         }
-        
-        // 退出登录
-        logoutLink.addEventListener('click', function(e) {
-            if (currentUser) {
-                e.preventDefault();
-                localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-            }
-        });
     }
 });
 
@@ -32,16 +21,21 @@ const carousel = {
         'images/12.png'
     ],
     init: function() {
-        this.banner = document.querySelector('.banner');
-        this.prevBtn = document.querySelector('.carousel-controls .prev');
-        this.nextBtn = document.querySelector('.carousel-controls .next');
-        
         // 检查必要的元素是否存在
-        if (!this.banner || !this.prevBtn || !this.nextBtn) {
+        const banner = document.querySelector('.banner');
+        const prevBtn = document.querySelector('.carousel-controls .prev');
+        const nextBtn = document.querySelector('.carousel-controls .next');
+        
+        if (!banner || !prevBtn || !nextBtn) {
             console.log('轮播图元素未找到');
             return;
         }
+
+        this.banner = banner;
+        this.prevBtn = prevBtn;
+        this.nextBtn = nextBtn;
         
+        // 绑定事件监听器
         this.prevBtn.addEventListener('click', () => this.showSlide('prev'));
         this.nextBtn.addEventListener('click', () => this.showSlide('next'));
         
@@ -60,13 +54,18 @@ const carousel = {
     }
 };
 
-// 初始化轮播图
+// 初始化所有功能
 document.addEventListener('DOMContentLoaded', function() {
-    carousel.init();
+    // 初始化轮播图
+    try {
+        carousel.init();
+    } catch (error) {
+        console.log('轮播图初始化失败:', error);
+    }
     
     // 商品分类点击事件
     const categoryItems = document.querySelectorAll('.category-item');
-    if (categoryItems) {
+    if (categoryItems && categoryItems.length > 0) {
         categoryItems.forEach(item => {
             item.addEventListener('click', function() {
                 const categorySpan = this.querySelector('span');
@@ -74,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const category = categorySpan.textContent;
                 const categoryUrls = {
-                    '服装':'fuzhuang.html',
+                    '服装': 'fuzhuang.html',
                     '潮鞋': 'chaoxie.html',
                     '零食': 'lingshi.html',
                     '家具': 'jiaju.html',
@@ -116,14 +115,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 商品卡片点击事件
     const productCards = document.querySelectorAll('.product-card');
-    if (productCards) {
+    if (productCards && productCards.length > 0) {
         productCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const productName = this.querySelector('h3')?.textContent;
-                if (productName) {
-                    console.log(`查看${productName}详情`);
-                }
-            });
+            // 检查是否已经有点击事件
+            if (!card.hasClickEvent) {
+                card.hasClickEvent = true;
+                card.addEventListener('click', function(e) {
+                    // 阻止事件冒泡，避免重复触发
+                    e.stopPropagation();
+                    const productName = this.querySelector('h3')?.textContent;
+                    if (productName) {
+                        console.log(`查看${productName}详情`);
+                    }
+                });
+            }
         });
     }
 

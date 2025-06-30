@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -10,25 +11,46 @@ const app = express();
 // 中间件
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname)));
 
-// 创建MySQL连接池
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',     // 替换为您的MySQL用户名
-    password: '123456', // 替换为您的MySQL密码
-    database: 'shopping_system',
+// 数据库配置
+const dbConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '123456',
+    database: process.env.DB_NAME || 'shopping_system',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
-});
+};
+
+// 创建MySQL连接池
+const pool = mysql.createPool(dbConfig);
 
 // 将连接池转换为Promise版本
 const promisePool = pool.promise();
 
+// 测试数据库连接
+async function testConnection() {
+    try {
+        const [rows] = await promisePool.query('SELECT 1');
+        console.log('数据库连接成功');
+        return true;
+    } catch (error) {
+        console.error('数据库连接失败:', error);
+        return false;
+    }
+}
+
 // 初始化数据库表
 async function initDatabase() {
     try {
+        // 首先测试连接
+        const isConnected = await testConnection();
+        if (!isConnected) {
+            throw new Error('无法连接到数据库');
+        }
+
         // 创建用户表
         await promisePool.query(`
             CREATE TABLE IF NOT EXISTS users (
@@ -88,14 +110,15 @@ async function initDatabase() {
     }
 }
 
-// 启动时初始化数据库
-initDatabase().catch(console.error);
-
 // API路由
 // 用户注册
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password, userType } = req.body;
+        
+        if (!username || !password || !userType) {
+            return res.status(400).json({ error: '请提供所有必需的信息' });
+        }
         
         // 检查用户名是否已存在
         const [existingUsers] = await promisePool.query(
@@ -121,19 +144,24 @@ app.post('/api/register', async (req, res) => {
             user: { id: result.insertId, username, userType } 
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('注册错误:', error);
+        res.status(500).json({ error: '注册失败，请稍后重试' });
     }
 });
 
 // 用户登录
 app.post('/api/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { username, password, userType } = req.body;
+        
+        if (!username || !password) {
+            return res.status(400).json({ error: '请提供用户名和密码' });
+        }
         
         // 查找用户
         const [users] = await promisePool.query(
-            'SELECT * FROM users WHERE username = ?',
-            [username]
+            'SELECT * FROM users WHERE username = ? AND user_type = ?',
+            [username, userType]
         );
         
         if (users.length === 0) {
@@ -157,7 +185,8 @@ app.post('/api/login', async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('登录错误:', error);
+        res.status(500).json({ error: '登录失败，请稍后重试' });
     }
 });
 
@@ -167,25 +196,46 @@ app.get('/api/products', async (req, res) => {
         const [products] = await promisePool.query('SELECT * FROM products');
         res.json(products);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('获取商品列表错误:', error);
+        res.status(500).json({ error: '获取商品列表失败，请稍后重试' });
     }
 });
 
 app.post('/api/products', async (req, res) => {
     try {
         const { name, price, description, image_url, merchant_id, stock, discount } = req.body;
+        
+        if (!name || !price || !merchant_id) {
+            return res.status(400).json({ error: '请提供商品的必要信息' });
+        }
+        
         const [result] = await promisePool.query(
             'INSERT INTO products (name, price, description, image_url, merchant_id, stock, discount) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [name, price, description, image_url, merchant_id, stock, discount]
+            [name, price, description, image_url, merchant_id, stock || 0, discount || 100]
         );
+        
         res.json({ success: true, productId: result.insertId });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('添加商品错误:', error);
+        res.status(500).json({ error: '添加商品失败，请稍后重试' });
     }
 });
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`服务器运行在端口 ${PORT}`);
-}); 
+
+// 启动服务器并初始化数据库
+async function startServer() {
+    try {
+        await initDatabase();
+        app.listen(PORT, () => {
+            console.log(`服务器运行在端口 ${PORT}`);
+            console.log(`请访问 http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('服务器启动失败:', error);
+        process.exit(1);
+    }
+}
+
+startServer(); 

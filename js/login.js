@@ -101,83 +101,89 @@ function logout() {
     }
 }
 
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    
-    // 清除之前的错误信息
-    clearErrors();
-    
-    // 简单的验证
-    if (!username || !password) {
-        if (!username) showError('usernameError', '请输入用户名');
-        if (!password) showError('passwordError', '请输入密码');
-        return;
-    }
-    
-    try {
-        console.log('发送登录请求:', {
-            url: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`,
-            userType: currentLoginType,
-            username
-        });
-        
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username,
-                password,
-                userType: currentLoginType
-            })
-        });
-        
-        console.log('收到响应:', {
-            status: response.status,
-            statusText: response.statusText
-        });
-        
-        const data = await response.json();
-        console.log('响应数据:', data);
-        
-        if (!response.ok) {
-            throw new Error(data.message || '登录失败');
-        }
-        
-        if (data.success) {
-            // 保存用户信息到localStorage
-            localStorage.setItem('userInfo', JSON.stringify(data.user));
+// 在页面加载完成后添加事件监听器
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            // 根据用户类型跳转到不同页面
-            if (data.user.userType === 'merchant') {
-                console.log('商家登录成功，跳转到商家管理页面');
-                // 确保清除任何可能导致循环的状态
-                sessionStorage.removeItem('loginRedirect');
-                window.location.replace('merchant_dashboard.html');
-            } else {
-                console.log('用户登录成功，跳转到主页');
-                window.location.replace('main.html');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // 清除之前的错误信息
+            clearErrors();
+            
+            // 简单的验证
+            if (!username || !password) {
+                if (!username) showError('usernameError', '请输入用户名');
+                if (!password) showError('passwordError', '请输入密码');
+                return;
             }
-            return; // 确保不会继续执行
-        }
-    } catch (error) {
-        console.error('登录错误:', error);
-        console.error('错误详情:', error.message);
-        if (error.message.includes('用户名不存在')) {
-            showError('usernameError', '用户名不存在');
-        } else if (error.message.includes('密码错误')) {
-            showError('passwordError', '密码错误');
-        } else if (error.message.includes('商家账号')) {
-            showError('usernameError', '此账号是商家账号，请使用商家登录');
-        } else if (error.message.includes('用户账号')) {
-            showError('usernameError', '此账号是用户账号，请使用用户登录');
-        } else {
-            showError('passwordError', `登录失败: ${error.message}`);
-        }
+            
+            try {
+                console.log('发送登录请求:', {
+                    url: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`,
+                    userType: currentLoginType,
+                    username
+                });
+                
+                const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        userType: currentLoginType
+                    })
+                });
+                
+                console.log('收到响应:', {
+                    status: response.status,
+                    statusText: response.statusText
+                });
+                
+                const data = await response.json();
+                console.log('响应数据:', data);
+                
+                if (!response.ok) {
+                    throw new Error(data.message || '登录失败');
+                }
+                
+                if (data.success) {
+                    // 保存用户信息到localStorage
+                    localStorage.setItem('userInfo', JSON.stringify(data.user));
+                    
+                    // 根据用户类型跳转到不同页面
+                    if (data.user.userType === 'merchant') {
+                        console.log('商家登录成功，跳转到商家管理页面');
+                        // 确保清除任何可能导致循环的状态
+                        sessionStorage.removeItem('loginRedirect');
+                        window.location.replace('merchant_dashboard.html');
+                    } else {
+                        console.log('用户登录成功，跳转到主页');
+                        window.location.replace('main.html');
+                    }
+                    return; // 确保不会继续执行
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                console.error('错误详情:', error.message);
+                if (error.message.includes('用户名不存在')) {
+                    showError('usernameError', '用户名不存在');
+                } else if (error.message.includes('密码错误')) {
+                    showError('passwordError', '密码错误');
+                } else if (error.message.includes('商家账号')) {
+                    showError('usernameError', '此账号是商家账号，请使用商家登录');
+                } else if (error.message.includes('用户账号')) {
+                    showError('usernameError', '此账号是用户账号，请使用用户登录');
+                } else {
+                    showError('passwordError', `登录失败: ${error.message}`);
+                }
+            }
+        });
     }
 });
 
