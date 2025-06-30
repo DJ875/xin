@@ -6,6 +6,7 @@
     <title>商家注册 - 商城系统</title>
     <link rel="stylesheet" href="styles.css">
     <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script src="js/config.js"></script>
 </head>
 <body>
     <div class="container">
@@ -32,8 +33,11 @@
                         <input type="password" id="confirmPassword" placeholder="确认密码" required>
                         <div class="error-message" id="confirmPasswordError"></div>
                     </div>
-                    <button type="submit" class="login-button">本地注册</button>
-                    <button type="button" class="login-button netlify-button" onclick="netlifyMerchantSignup()">Netlify注册</button>
+                    <div class="error-message" id="registerError"></div>
+                    <div class="register-buttons">
+                        <button type="submit" class="login-button">本地注册</button>
+                        <button type="button" onclick="netlifySignup()" class="login-button netlify-button">Netlify注册</button>
+                    </div>
                 </form>
                 <div class="additional-links">
                     <a href="index.html" class="back-to-login">返回登录</a>
@@ -41,17 +45,6 @@
             </div>
         </div>
     </div>
-    <script>
-        if (window.netlifyIdentity) {
-            window.netlifyIdentity.on("init", user => {
-                if (!user) {
-                    window.netlifyIdentity.on("login", () => {
-                        window.location.href = "index.html";
-                    });
-                }
-            });
-        }
-    </script>
     <script src="js/merchant_register.js"></script>
 </body>
 </html> 
