@@ -1,5 +1,10 @@
 let currentLoginType = 'user';
 
+// 初始化Netlify Identity
+window.netlifyIdentity.init({
+    locale: 'zh'
+});
+
 function switchLoginType(type) {
     currentLoginType = type;
     const userBtn = document.getElementById('userLoginBtn');
@@ -42,7 +47,8 @@ function localLogin() {
         body: JSON.stringify({
             username,
             password,
-            userType: currentLoginType
+            userType: currentLoginType,
+            loginType: 'local'
         })
     })
     .then(response => response.json())
@@ -57,7 +63,7 @@ function localLogin() {
             localStorage.setItem('userInfo', JSON.stringify(loginInfo));
             
             // 根据用户类型跳转
-            window.location.href = data.user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
+            window.location.replace(data.user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html');
         } else {
             throw new Error(data.message || '登录失败');
         }
@@ -68,21 +74,14 @@ function localLogin() {
     });
 }
 
-// Netlify登录处理
-function netlifyLogin() {
+// 显示Netlify登录界面
+function showNetlifyLogin() {
     // 设置当前登录类型
     sessionStorage.setItem('loginType', currentLoginType);
     
-    // 初始化Netlify Identity
-    window.netlifyIdentity.init({
-        locale: 'zh'
-    });
-
     // 配置Netlify Identity Widget
-    const container = document.querySelector('#netlify-modal') || document.body;
     window.netlifyIdentity.setConfig({
         locale: 'zh',
-        container: container,
         theme: {
             mode: 'light',
             logo: currentLoginType === 'merchant' ? 'images/merchant-logo.png' : 'images/user-logo.png',
@@ -111,7 +110,8 @@ function netlifyLogin() {
             body: JSON.stringify({
                 username: user.email,
                 userType: userType,
-                netlifyToken: user.token.access_token
+                netlifyToken: user.token.access_token,
+                loginType: 'netlify'
             })
         })
         .then(response => response.json())
@@ -127,7 +127,7 @@ function netlifyLogin() {
                 localStorage.setItem('userInfo', JSON.stringify(loginInfo));
                 
                 // 根据用户类型跳转
-                window.location.href = userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
+                window.location.replace(userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html');
             } else {
                 throw new Error(data.message || '登录验证失败');
             }
@@ -145,7 +145,7 @@ function netlifyLogin() {
     });
     
     // 打开Netlify登录窗口
-    window.netlifyIdentity.open();
+    window.netlifyIdentity.open('login');
 }
 
 // 退出登录
@@ -207,8 +207,18 @@ function checkLoginStatus() {
     return false;
 }
 
-// 页面加载时检查登录状态
+// 检查是否是从注册页面跳转来的
 document.addEventListener('DOMContentLoaded', () => {
+    const registrationType = sessionStorage.getItem('registrationType');
+    if (registrationType) {
+        // 如果是从注册页面跳转来的，自动打开对应的登录方式
+        if (registrationType === 'netlify') {
+            showNetlifyLogin();
+        }
+        // 清除注册类型信息
+        sessionStorage.removeItem('registrationType');
+    }
+    
     // 获取当前页面路径
     const currentPath = window.location.pathname;
     const isLoginPage = currentPath.includes('index.html') || currentPath.endsWith('/');

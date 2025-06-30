@@ -96,8 +96,10 @@ function netlifyRegister() {
         .then(data => {
             if (data.success) {
                 showMessage('注册成功，即将跳转到登录页面...', 'success');
+                // 设置注册类型，用于登录页面自动选择登录方式
+                sessionStorage.setItem('registrationType', 'netlify');
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    window.location.replace('index.html');
                 }, 2000);
             } else {
                 throw new Error(data.message || '注册失败');
@@ -113,28 +115,64 @@ function netlifyRegister() {
     window.netlifyIdentity.open('signup');
 }
 
+// 本地注册处理
+function localRegister() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    clearErrors();
+    
+    if (!validateForm(username, password, confirmPassword)) {
+        return;
+    }
+    
+    // 使用API注册
+    fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username,
+            password,
+            userType: 'user',
+            loginType: 'local'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('注册成功，即将跳转到登录页面...', 'success');
+            // 设置注册类型，用于登录页面自动选择登录方式
+            sessionStorage.setItem('registrationType', 'local');
+            setTimeout(() => {
+                window.location.replace('index.html');
+            }, 2000);
+        } else {
+            throw new Error(data.message || '注册失败');
+        }
+    })
+    .catch(error => {
+        console.error('注册错误:', error);
+        showMessage(error.message || '注册失败，请稍后重试', 'error');
+    });
+}
+
 function validateForm(username, password, confirmPassword) {
-    let isValid = true;
-    
-    // 用户名验证
-    if (!username || username.length < 3) {
-        showError('usernameError', '用户名至少需要3个字符');
-        isValid = false;
+    if (!username || !password || !confirmPassword) {
+        if (!username) showError('usernameError', '请输入用户名');
+        if (!password) showError('passwordError', '请输入密码');
+        if (!confirmPassword) showError('confirmPasswordError', '请确认密码');
+        return false;
     }
     
-    // 密码验证
-    if (!password || password.length < 6) {
-        showError('passwordError', '密码至少需要6个字符');
-        isValid = false;
-    }
-    
-    // 确认密码验证
     if (password !== confirmPassword) {
         showError('confirmPasswordError', '两次输入的密码不一致');
-        isValid = false;
+        return false;
     }
     
-    return isValid;
+    return true;
 }
 
 function showError(elementId, message) {
