@@ -205,7 +205,22 @@ function checkLoginStatus() {
 
 // 页面加载时检查登录状态
 document.addEventListener('DOMContentLoaded', () => {
-    if (!checkLoginStatus() && !window.location.pathname.includes('index.html')) {
-        window.location.href = 'index.html';
+    // 获取当前页面路径
+    const currentPath = window.location.pathname;
+    
+    // 如果不是登录页面，才检查登录状态并重定向
+    if (!currentPath.includes('index.html') && !currentPath.endsWith('/')) {
+        if (!checkLoginStatus()) {
+            window.location.href = 'index.html';
+        }
+    } else {
+        // 如果是登录页面且用户已登录，直接跳转到对应页面
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo) {
+            const user = JSON.parse(userInfo);
+            if (checkLoginStatus()) {
+                window.location.href = user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
+            }
+        }
     }
 }); 
