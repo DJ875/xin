@@ -152,4 +152,50 @@ function performSearch() {
     if (keyword) {
         window.location.href = `search.html?keyword=${encodeURIComponent(keyword)}`;
     }
+}
+
+// 页面加载时检查登录状态
+window.addEventListener('DOMContentLoaded', function() {
+    checkLoginStatus();
+    loadProducts();
+});
+
+// 检查登录状态
+function checkLoginStatus() {
+    const userInfo = localStorage.getItem('userInfo');
+    if (!userInfo) {
+        window.location.replace('index.html');
+        return;
+    }
+    
+    const user = JSON.parse(userInfo);
+    // 检查登录是否过期
+    const loginTime = user.loginTime;
+    const currentTime = new Date().getTime();
+    if (currentTime - loginTime > 24 * 60 * 60 * 1000) {
+        // 登录已过期，清除用户信息并跳转到登录页面
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace('index.html');
+        return;
+    }
+
+    // 检查用户类型
+    if (user.userType === 'merchant') {
+        alert('商家用户请使用商家管理界面');
+        window.location.replace('merchant_dashboard.html');
+        return;
+    }
+
+    // 更新用户界面
+    updateUserInterface(user);
+}
+
+// 更新用户界面
+function updateUserInterface(user) {
+    // 显示用户名
+    const usernameElement = document.getElementById('username');
+    if (usernameElement) {
+        usernameElement.textContent = user.username;
+    }
 } 

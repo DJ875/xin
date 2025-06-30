@@ -526,22 +526,5 @@
     
     <script src="js/common.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/login.js"></script>
-    <script>
-        // 页面加载时检查登录状态
-        window.addEventListener('DOMContentLoaded', function() {
-            const userInfo = localStorage.getItem('userInfo');
-            if (!userInfo) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            const user = JSON.parse(userInfo);
-            if (user.userType === 'merchant') {
-                alert('商家用户请使用商家管理界面');
-                window.location.href = 'merchant_dashboard.html';
-            }
-        });
-    </script>
 </body>
 </html> 
