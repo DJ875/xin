@@ -1,14 +1,51 @@
+// ===== 占位: 加载商品 =====
+function loadProducts(){
+    // TODO: 后续可通过 fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}`) 获取商品
+    console.log('loadProducts() 被调用 - 这是占位实现');
+}
+
 // 获取登录用户信息
 document.addEventListener('DOMContentLoaded', function() {
     const userInfo = localStorage.getItem('userInfo');
     const userWelcome = document.querySelector('.user-welcome');
     const logoutLink = document.querySelector('.logout');
     
-    if (userInfo && userWelcome && logoutLink) {
-        const user = JSON.parse(userInfo);
-        if (user) {
-            userWelcome.textContent = `欢迎，${user.username}`;
-        }
+    if (!userInfo) {
+        // 如果未登录，重定向到登录页面
+        window.location.replace('index.html');
+        return;
+    }
+
+    const user = JSON.parse(userInfo);
+    // 检查登录是否过期
+    const loginTime = user.loginTime;
+    const currentTime = new Date().getTime();
+    if (currentTime - loginTime > 24 * 60 * 60 * 1000) {
+        // 登录已过期，清除用户信息并跳转到登录页面
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace('index.html');
+        return;
+    }
+
+    // 检查用户类型
+    if (user.userType === 'merchant') {
+        alert('商家用户请使用商家管理界面');
+        window.location.replace('merchant_dashboard.html');
+        return;
+    }
+
+    // 更新用户界面
+    if (userWelcome && user) {
+        userWelcome.textContent = `欢迎，${user.username}`;
+    }
+
+    // 添加退出登录事件监听
+    if (logoutLink) {
+        logoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            logout();
+        });
     }
 });
 
@@ -156,7 +193,6 @@ function performSearch() {
 
 // 页面加载时检查登录状态
 window.addEventListener('DOMContentLoaded', function() {
-    checkLoginStatus();
     loadProducts();
 });
 

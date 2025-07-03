@@ -1,501 +1,353 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // 获取用户信息
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    
-    // 检查是否登录且是商家账号
-    if (!userInfo) {
-        console.log('未登录，重定向到登录页面');
+// 初始化 Netlify Identity
+const netlifyIdentity = window.netlifyIdentity;
+
+// API配置
+const { BASE_URL: DASH_BASE } = API_CONFIG;
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', async () => {
+    // 检查登录状态
+    const userId = localStorage.getItem('userId');
+    const userType = localStorage.getItem('userType');
+
+    if (!userId || userType !== 'merchant') {
         window.location.href = 'index.html';
         return;
     }
     
-    if (userInfo.userType !== 'merchant') {
-        console.log('非商家账号，重定向到登录页面');
-        // 清除localStorage中的用户信息
-        localStorage.removeItem('userInfo');
-        alert('请使用商家账号登录');
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    currentMerchant = userInfo;
-    
-    // 更新页面显示
-    updateMerchantInfo();
-    
-    // 立即加载所有数据
-    loadProducts();
-    loadSalesData();
-    loadDiscountProducts();
-    
-    // 设置默认显示商品管理页面
-    document.getElementById('productsSection').style.display = 'block';
-    document.getElementById('salesSection').style.display = 'none';
-    document.getElementById('discountSection').style.display = 'none';
-    document.getElementById('productsLink').classList.add('active');
+    // 加载商家信息
+    await loadMerchantInfo();
+    // 加载概览数据
+    await loadOverviewData();
+    // 加载商品列表
+    await loadProducts();
+    // 加载订单列表
+    await loadOrders();
 });
 
-// 获取当前登录的商家信息
-let currentMerchant = null;
-let currentSection = 'products';
+// 切换面板
+function switchTab(tabName) {
+    // 隐藏所有面板
+    document.querySelectorAll('.dashboard-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+    
+    // 显示选中的面板
+    const current = document.getElementById(tabName);
+    if(current){ current.classList.add('active'); }
+    
+    // 更新导航按钮状态
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const navBtn = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+    if(navBtn){ navBtn.classList.add('active'); }
 
-function updateMerchantInfo() {
-    document.querySelector('.merchant-welcome').textContent = currentMerchant.businessName;
-    document.getElementById('merchantName').textContent = currentMerchant.businessName;
-    document.getElementById('registrationDate').textContent = new Date().toLocaleDateString();
-    document.getElementById('businessTypes').textContent = '所有类目';
-    document.getElementById('contactInfo').textContent = currentMerchant.username;
-}
-
-function showSection(section) {
-    currentSection = section;
-    // 更新导航栏激活状态
-    document.querySelectorAll('.nav-menu a').forEach(link => link.classList.remove('active'));
-    document.getElementById(`${section}Link`).classList.add('active');
-    
-    // 隐藏所有section
-    document.getElementById('productsSection').style.display = 'none';
-    document.getElementById('salesSection').style.display = 'none';
-    document.getElementById('discountSection').style.display = 'none';
-    
-    // 显示选中的section
-    document.getElementById(`${section}Section`).style.display = 'block';
-    
-    // 根据需要重新加载数据
-    if (section === 'sales') {
-        loadSalesData();
-    } else if (section === 'products') {
-        loadProducts();
-    } else if (section === 'discount') {
+    // 进入不同面板时动态加载数据
+    if(tabName === 'discount'){
         loadDiscountProducts();
+    } else if(tabName === 'sales'){
+        loadSalesStats();
     }
 }
 
-async function loadProducts() {
+// 兼容HTML中的showSection()
+function showSection(name){
+    switchTab(name);
+}
+
+// 加载商家信息
+async function loadMerchantInfo() {
     try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const userId = localStorage.getItem('userId');
+        const response = await fetch(`${DASH_BASE}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'get_merchant_info',
+                userId
+            })
+        });
+
         const data = await response.json();
-        
         if (data.success) {
-            const productsGrid = document.getElementById('productsGrid');
-            productsGrid.innerHTML = data.products.map(product => `
-                <div class="product-card">
-                    <div class="product-actions">
-                        <button class="edit-btn" onclick="editProduct('${product.id}')">✎</button>
-                        <button class="delete-btn" onclick="deleteProduct('${product.id}')">×</button>
+            document.getElementById('merchantName').textContent = data.merchant.business_name;
+            
+            // 填充设置表单
+            document.getElementById('businessName').value = data.merchant.business_name;
+            document.getElementById('businessType').value = data.merchant.business_type.split(',');
+            document.getElementById('description').value = data.merchant.description || '';
+            document.getElementById('contactPhone').value = data.merchant.contact_phone || '';
+            document.getElementById('address').value = data.merchant.address || '';
+        }
+    } catch (error) {
+        console.error('加载商家信息失败:', error);
+    }
+}
+
+// 加载概览数据
+async function loadOverviewData() {
+    try {
+        const userId = localStorage.getItem('userId');
+        const response = await fetch(`${DASH_BASE}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'get_merchant_overview',
+                userId
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('todayOrders').textContent = data.todayOrders;
+            document.getElementById('todaySales').textContent = `¥${data.todaySales.toFixed(2)}`;
+            document.getElementById('totalProducts').textContent = data.totalProducts;
+            document.getElementById('pendingOrders').textContent = data.pendingOrders;
+
+            // 加载最近订单
+            const recentOrdersList = document.getElementById('recentOrdersList');
+            recentOrdersList.innerHTML = data.recentOrders.map(order => `
+                <div class="order-item">
+                    <div class="order-info">
+                        <span class="order-id">订单号：${order.id}</span>
+                        <span class="order-time">${new Date(order.created_at).toLocaleString()}</span>
                     </div>
-                    <img src="${product.image_url}" alt="${product.name}" onerror="this.src='images/default-product.jpg'">
-                    <h3>${product.name}</h3>
-                    <p class="price">¥${product.price}</p>
-                    <p class="upload-time">上架时间: ${new Date(product.created_at).toLocaleString()}</p>
+                    <div class="order-amount">¥${order.total_amount.toFixed(2)}</div>
+                    <div class="order-status ${order.status}">${getOrderStatusText(order.status)}</div>
                 </div>
             `).join('');
-        } else {
-            throw new Error(data.message || '加载失败');
         }
     } catch (error) {
-        console.error('加载商品列表失败：', error);
-        alert('加载商品列表失败，请刷新页面重试');
+        console.error('加载概览数据失败:', error);
     }
 }
 
-async function loadSalesData() {
+// 加载商品列表
+async function loadProducts(kw = '') {
     try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        if (data.success) {
-            const salesList = document.getElementById('salesList');
-            // 按销量排序（目前默认为0）
-            const sortedProducts = data.products.map(product => ({
-                ...product,
-                sales: 0 // 后续可以添加实际销量
-            })).sort((a, b) => (b.sales || 0) - (a.sales || 0));
-            
-            salesList.innerHTML = sortedProducts.map(product => `
-                <div class="sales-item">
-                    <img src="${product.image_url}" alt="${product.name}" onerror="this.src='images/default-product.jpg'">
-                    <div class="sales-info">
-                        <h3>${product.name}</h3>
-                        <p class="price">¥${product.price}</p>
-                    </div>
-                    <div class="sales-count">销量：${product.sales || 0}</div>
-                </div>
-            `).join('') || '<p>暂无销售数据</p>';
-        }
-    } catch (error) {
-        console.error('加载销售数据失败：', error);
-        document.getElementById('salesList').innerHTML = '<p>加载销售数据失败</p>';
-    }
-}
+        const userId = localStorage.getItem('userId');
+        const response = await fetch(`${DASH_BASE}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'get_merchant_products',
+                userId,
+                kw
+            })
+        });
 
-async function loadDiscountProducts() {
-    try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
         const data = await response.json();
-        
         if (data.success) {
-            const discountList = document.getElementById('discountList');
-            const discountedProducts = data.products.filter(product => product.discount && product.discount < 100);
-            
-            discountList.innerHTML = discountedProducts.map(product => `
+            const productsList = document.getElementById('productsList');
+            productsList.innerHTML = data.products.map(product => `
                 <div class="product-card">
-                    <div class="discount-tag">${product.discount}% OFF</div>
-                    <img src="${product.image_url}" alt="${product.name}" onerror="this.src='images/default-product.jpg'">
+                    <img src="${product.image_url}" alt="${product.name}" class="product-image">
+                    <div class="product-info">
                     <h3>${product.name}</h3>
-                    <p>
-                        <span class="original-price">¥${product.price.toFixed(2)}</span>
-                        <span class="discounted-price">¥${(product.price * product.discount / 100).toFixed(2)}</span>
-                    </p>
-                    <p class="upload-time">上架时间: ${new Date(product.created_at).toLocaleString()}</p>
+                        <p class="product-price">¥${formatPrice(product.price, product.discount)}</p>
+                        <p class="product-stock">库存：${product.stock}</p>
+                    </div>
+                    <div class="product-actions">
+                        <button onclick="editProduct(${product.id})" class="edit-button">编辑</button>
+                        <button onclick="deleteProduct(${product.id})" class="delete-button">删除</button>
+                    </div>
                 </div>
-            `).join('') || '<p>暂无折扣商品</p>';
+            `).join('');
         }
     } catch (error) {
-        console.error('加载折扣商品失败：', error);
-        document.getElementById('discountList').innerHTML = '<p>加载折扣商品失败</p>';
+        console.error('加载商品列表失败:', error);
     }
 }
 
-function showAddProductModal() {
-    const modal = document.createElement('div');
-    modal.className = 'product-modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <h2>添加新商品</h2>
-            <form id="productForm">
-                <div class="form-group">
-                    <label>商品名称</label>
-                    <input type="text" id="productName" required>
-                </div>
-                <div class="form-group">
-                    <label>商品价格</label>
-                    <input type="number" id="productPrice" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>折扣设置</label>
-                    <div class="discount-setting">
-                        <input type="checkbox" id="enableDiscount" onchange="toggleDiscountInput()">
-                        <label for="enableDiscount">启用折扣</label>
-                        <input type="number" id="discountPercent" min="1" max="99" disabled
-                               onchange="updateDiscountedPrice()" onkeyup="updateDiscountedPrice()">
-                        <span>%</span>
-                    </div>
-                    <p id="discountedPriceDisplay" style="display: none;"></p>
-                </div>
-                <div class="form-group">
-                    <label>商品图片</label>
-                    <div class="image-upload" onclick="document.getElementById('imageInput').click()">
-                        <input type="file" id="imageInput" accept="image/*" style="display: none" onchange="handleImageUpload(event)">
-                        <p>点击上传图片</p>
-                        <img id="previewImage" style="display: none">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>商品描述</label>
-                    <textarea id="productDescription" required></textarea>
-                </div>
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn" onclick="this.closest('.product-modal').remove()">取消</button>
-                    <button type="submit" class="save-btn">保存</button>
-                </div>
-            </form>
-        </div>
-    `;
-    document.body.appendChild(modal);
+// 加载订单列表
+async function loadOrders(status = 'all', date = '') {
+    try {
+        const userId = localStorage.getItem('userId');
+        const response = await fetch(`${DASH_BASE}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get_merchant_orders', userId, status, date })
+        });
+        const data = await response.json();
+        if (data.success) {
+            const ordersList = document.getElementById('ordersList');
+            ordersList.innerHTML = `
+                <table>
+                    <thead>
+                        <tr><th>订单号</th><th>下单时间</th><th>订单金额</th><th>订单状态</th><th>操作</th></tr>
+                    </thead>
+                    <tbody>
+                        ${data.orders.map(order=>`
+                            <tr>
+                              <td>${order.id}</td>
+                              <td>${new Date(order.created_at).toLocaleString()}</td>
+                              <td>¥${order.total_amount.toFixed(2)}</td>
+                              <td>${getOrderStatusText(order.status)}</td>
+                              <td></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+        }
+    } catch(err){ console.error('加载订单列表失败:',err); }
+}
 
-    document.getElementById('productForm').addEventListener('submit', async function(e) {
+function searchProducts(){ const kw=document.getElementById('productSearch').value.trim(); loadProducts(kw);}
+
+// 打开/关闭添加商品模态框
+function showAddProductModal(){
+  document.getElementById('addProductModal').style.display='block';
+}
+
+function closeAddProductModal(){
+  document.getElementById('addProductModal').style.display='none';
+}
+
+// 暴露给 inline onclick
+window.showAddProductModal=showAddProductModal;
+window.closeAddProductModal=closeAddProductModal;
+
+// ------------------------ 添加商品 ------------------------
+const addProductForm = document.getElementById('addProductForm');
+if(addProductForm){
+    addProductForm.addEventListener('submit', async (e)=>{
         e.preventDefault();
-        
-        // 显示加载提示
-        const submitButton = this.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = '上传中...';
-        
-        try {
-            // 获取表单数据
-            const name = document.getElementById('productName').value;
+        const name = document.getElementById('productName').value.trim();
+        const description = document.getElementById('productDescription').value.trim();
             const price = parseFloat(document.getElementById('productPrice').value);
-            const description = document.getElementById('productDescription').value;
-            const imageInput = document.getElementById('imageInput');
-            const enableDiscount = document.getElementById('enableDiscount').checked;
-            const discountPercent = enableDiscount ? parseInt(document.getElementById('discountPercent').value) : 100;
-            
-            console.log('表单数据:', { name, price, description, discountPercent, enableDiscount });
-            
-            // 基本验证
-            if (!name || !price || !description) {
-                throw new Error('请填写所有必需的商品信息');
-            }
-            
-            if (isNaN(price) || price <= 0) {
-                throw new Error('请输入有效的商品价格');
-            }
-            
-            // 验证图片是否已上传
-            if (!imageInput.files || imageInput.files.length === 0) {
-                throw new Error('请选择商品图片');
-            }
+        const stock = parseInt(document.getElementById('productStock').value,10);
+        const category = document.getElementById('productCategory').value;
+        const discount = parseInt(document.getElementById('productDiscount').value,10);
+        const merchantId = localStorage.getItem('userId');
 
-            // 读取图片文件并转换为base64
-            const imageFile = imageInput.files[0];
-            console.log('图片信息:', {
-                name: imageFile.name,
-                type: imageFile.type,
-                size: imageFile.size
-            });
-            
+        // 处理图片
+        const fileInput = document.getElementById('productImage');
+        const file = fileInput.files[0];
+        if(!file){ alert('请选择商品图片'); return; }
+        const toBase64 = f => new Promise((resolve, reject)=>{
             const reader = new FileReader();
-            
-            reader.onload = async function(event) {
-                try {
-                    const image_url = event.target.result;
-                    console.log('图片已转换为base64');
-                    
-                    // 准备商品数据
-                    const productData = {
-                        name,
-                        price,
-                        description,
-                        image_url,
-                        discount: discountPercent
-                    };
-                    
-                    console.log('准备发送的数据:', {
-                        ...productData,
-                        image_url: '(base64数据已省略)'
-                    });
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(f);
+        });
+        let imageBase64 = '';
+        try{ imageBase64 = await toBase64(file); }catch(err){ console.error('读取图片失败', err); }
 
-                    // 发送请求
-                    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(productData)
-                    });
-
-                    console.log('服务器响应状态:', response.status);
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('服务器错误响应:', errorText);
-                        throw new Error(`上传失败: ${response.status} ${errorText}`);
-                    }
-
-                    const result = await response.json();
-                    console.log('服务器响应数据:', result);
-                    
-                    if (result.success) {
-                        alert('商品上传成功！');
-                        // 关闭模态框
-                        document.querySelector('.product-modal').remove();
-                        // 重新加载所有商品列表
+        try{
+            const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ name, description, price, stock, category, discount, merchant_id: merchantId, image_url: imageBase64 })
+            });
+            const data = await res.json();
+            if(data.success){
+                alert('商品添加成功');
+                closeAddProductModal();
+                addProductForm.reset();
                         loadProducts();
-                        loadSalesData();
-                        loadDiscountProducts();
-                    } else {
-                        throw new Error(result.message || '上传失败');
+            }else{
+                alert(data.message || '添加失败');
                     }
-                } catch (error) {
-                    console.error('商品上传失败：', error);
-                    alert('商品上传失败：' + error.message);
-                } finally {
-                    // 恢复按钮状态
-                    submitButton.disabled = false;
-                    submitButton.textContent = '保存';
-                }
-            };
-            
-            reader.onerror = function(error) {
-                console.error('图片读取错误:', error);
-                alert('图片读取失败，请重试');
-                submitButton.disabled = false;
-                submitButton.textContent = '保存';
-            };
-            
-            reader.readAsDataURL(imageFile);
-        } catch (error) {
-            console.error('表单处理错误：', error);
-            alert('表单处理错误：' + error.message);
-            // 恢复按钮状态
-            submitButton.disabled = false;
-            submitButton.textContent = '保存';
-        }
+        }catch(err){ console.error('添加商品失败', err); alert('网络错误'); }
     });
 }
 
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    const previewImage = document.getElementById('previewImage');
-    const uploadText = event.target.parentElement.querySelector('p');
-    
-    if (file) {
-        // 验证文件类型
-        if (!file.type.startsWith('image/')) {
-            alert('请选择图片文件');
-            return;
+// 新增：加载折扣商品列表
+async function loadDiscountProducts(){
+    try{
+        const userId = localStorage.getItem('userId');
+        const res = await fetch(`${DASH_BASE}`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ action:'get_discount_products', userId })
+        });
+        const data = await res.json();
+        if(data.success){
+            const list = document.getElementById('discountProductsList');
+            list.innerHTML = data.products.map(prod=>`
+                <div class="discount-product-card">
+                    <span class="discount-tag">${prod.discount}%</span>
+                    <img src="${prod.image_url}" alt="${prod.name}">
+                    <h3>${prod.name}</h3>
+                    <div class="price">
+                        <span class="original-price">¥${prod.price.toFixed(2)}</span>
+                        <span class="discounted-price">¥${(prod.price * prod.discount / 100).toFixed(2)}</span>
+                    </div>
+                    <div class="discount-period">库存：${prod.stock}</div>
+                </div>
+            `).join('');
         }
-        
-        // 验证文件大小（限制为5MB）
-        if (file.size > 5 * 1024 * 1024) {
-            alert('图片大小不能超过5MB');
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewImage.style.display = 'block';
-            uploadText.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-    }
+    }catch(err){ console.error('加载折扣商品失败:', err); }
 }
 
-function editProduct(productId) {
-    const product = currentMerchant.products.find(p => p.id === productId);
-    if (!product) return;
-
-    const modal = document.createElement('div');
-    modal.className = 'product-modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <h2>编辑商品</h2>
-            <form id="productForm">
-                <div class="form-group">
-                    <label>商品名称</label>
-                    <input type="text" id="productName" value="${product.name}" required>
-                </div>
-                <div class="form-group">
-                    <label>商品价格</label>
-                    <input type="number" id="productPrice" value="${product.price}" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>折扣设置</label>
-                    <div class="discount-setting">
-                        <input type="checkbox" id="enableDiscount" onchange="toggleDiscountInput()" ${product.discount && product.discount < 100 ? 'checked' : ''}>
-                        <label for="enableDiscount">启用折扣</label>
-                        <input type="number" id="discountPercent" min="1" max="99" value="${product.discount || 90}" 
-                               ${product.discount && product.discount < 100 ? '' : 'disabled'}
-                               onchange="updateDiscountedPrice()" onkeyup="updateDiscountedPrice()">
-                        <span>%</span>
-                    </div>
-                    <p id="discountedPriceDisplay" style="display: ${product.discount && product.discount < 100 ? 'block' : 'none'};"></p>
-                </div>
-                <div class="form-group">
-                    <label>商品图片</label>
-                    <div class="image-upload" onclick="document.getElementById('imageInput').click()">
-                        <input type="file" id="imageInput" accept="image/*" style="display: none" onchange="handleImageUpload(event)">
-                        <p>点击更换图片</p>
-                        <img id="previewImage" src="${product.image}" style="display: block">
+// 新增：加载销售统计
+async function loadSalesStats(){
+    try{
+        const userId = localStorage.getItem('userId');
+        const res = await fetch(`${DASH_BASE}`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ action:'get_sales_stats', userId })
+        });
+        const data = await res.json();
+        if(data.success){
+            const container = document.getElementById('salesList');
+            container.innerHTML = data.stats.map(item=>`
+                <div class="sales-item">
+                    <img src="${item.image_url}" alt="${item.name}">
+                    <div class="sales-info">
+                        <h4>${item.name}</h4>
+                        <p>总销量：<span class="sales-count">${item.totalSold}</span></p>
+                        <p>销售额：¥${item.totalRevenue.toFixed(2)}</p>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>商品描述</label>
-                    <textarea id="productDescription" required>${product.description}</textarea>
-                </div>
-                <div class="form-group">
-                    <label>上架时间</label>
-                    <input type="text" value="${new Date(product.uploadTime).toLocaleString()}" disabled>
-                </div>
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn" onclick="this.closest('.product-modal').remove()">取消</button>
-                    <button type="submit" class="save-btn">保存</button>
-                </div>
-            </form>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    // 如果有折扣，初始化折扣价格显示
-    if (product.discount && product.discount < 100) {
-        updateDiscountedPrice();
-    }
-
-    document.getElementById('productForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const enableDiscount = document.getElementById('enableDiscount').checked;
-        const discount = enableDiscount ? parseFloat(document.getElementById('discountPercent').value) : 100;
-        
-        // 更新商品信息
-        product.name = document.getElementById('productName').value;
-        product.price = parseFloat(document.getElementById('productPrice').value);
-        product.description = document.getElementById('productDescription').value;
-        product.discount = discount;
-        
-        const previewImage = document.getElementById('previewImage');
-        if (previewImage.src !== product.image) {
-            product.image = previewImage.src;
+            `).join('');
         }
-        
-        // 更新localStorage中的商家信息
-        updateMerchantData();
-        
-        // 刷新所有相关页面
-        loadProducts();
-        loadSalesData();
-        loadDiscountProducts();
-        
-        // 关闭弹窗
-        modal.remove();
-    });
+    }catch(err){ console.error('加载销售统计失败:', err); }
 }
 
-function deleteProduct(productId) {
-    if (confirm('确定要删除这个商品吗？')) {
-        currentMerchant.products = currentMerchant.products.filter(p => p.id !== productId);
-        updateMerchantData();
-        loadProducts();
-        loadSalesData();
-        loadDiscountProducts();
+// Fallback：若 common.js 未加载，提供简易 logout
+if(typeof window.logout !== 'function'){
+    window.logout = function(){
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace('index.html');
+    };
+}
+
+// 格式化价格（考虑折扣）
+function formatPrice(price, discount){
+    const final = discount && discount < 100 ? price * discount / 100 : price;
+    return final.toFixed(2);
+}
+
+function getOrderStatusText(status){
+    switch(status){
+        case 'pending': return '待处理';
+        case 'paid': return '已支付';
+        case 'shipped': return '已发货';
+        case 'delivered': return '已完成';
+        case 'cancelled': return '已取消';
+        default: return status;
     }
 }
 
-function updateMerchantData() {
-    // 更新localStorage中的商家信息
-    localStorage.setItem('userInfo', JSON.stringify(currentMerchant));
-    
-    // 更新merchants数组中的商家信息
-    const merchants = JSON.parse(localStorage.getItem('merchants') || '[]');
-    const index = merchants.findIndex(m => m.id === currentMerchant.id);
-    if (index !== -1) {
-        merchants[index] = currentMerchant;
-        localStorage.setItem('merchants', JSON.stringify(merchants));
-    }
+// 删除商品
+async function deleteProduct(id){
+  if(!confirm('确定删除此商品?')) return;
+  try{
+    const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}/${id}`,{method:'DELETE'});
+    const data = await res.json();
+    if(data.success){ alert('已删除'); loadProducts(); }
+    else alert(data.message||'删除失败');
+  }catch(err){ console.error('删除商品失败',err); alert('网络错误'); }
 }
 
-function toggleDiscountInput() {
-    const discountInput = document.getElementById('discountPercent');
-    const enableDiscount = document.getElementById('enableDiscount');
-    const priceDisplay = document.getElementById('discountedPriceDisplay');
-    
-    discountInput.disabled = !enableDiscount.checked;
-    priceDisplay.style.display = enableDiscount.checked ? 'block' : 'none';
-    
-    if (enableDiscount.checked) {
-        discountInput.value = discountInput.value || '90';
-        updateDiscountedPrice();
-    }
-}
-
-function updateDiscountedPrice() {
-    const price = parseFloat(document.getElementById('productPrice').value) || 0;
-    const discount = parseFloat(document.getElementById('discountPercent').value) || 100;
-    const discountedPrice = price * discount / 100;
-    
-    document.getElementById('discountedPriceDisplay').innerHTML = `
-        折后价格: <span class="discounted-price">¥${discountedPrice.toFixed(2)}</span>
-        <span class="original-price">¥${price.toFixed(2)}</span>
-    `;
-} 
+window.deleteProduct = deleteProduct; 

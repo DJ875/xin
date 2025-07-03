@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商家管理 - 购物系统</title>
-    <link rel="stylesheet" href="css/main.css">
+    <title>商家管理面板 - 购物系统</title>
     <link rel="stylesheet" href="css/common.css">
-    <script src="js/config.js"></script>
+    <link rel="stylesheet" href="css/main.css">
     <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/common.js"></script>
     <style>
         body {
             min-height: 100vh;
@@ -86,6 +87,16 @@
 
         .product-card {
             position: relative;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .product-actions {
@@ -93,29 +104,20 @@
             top: 10px;
             right: 10px;
             display: flex;
-            gap: 10px;
+            gap: 5px;
         }
 
-        .edit-btn, .delete-btn {
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 15px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        .product-actions button {
+            padding: 5px 10px;
+            font-size: 14px;
         }
 
         .edit-btn {
-            color: #4a90e2;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
         }
 
         .delete-btn {
-            color: #ff6b6b;
+            background: linear-gradient(45deg, #f44336, #e53935);
         }
 
         /* 添加/编辑商品弹窗 */
@@ -282,23 +284,35 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: #ff6b6b;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
             color: white;
             padding: 5px 10px;
-            border-radius: 3px;
-            font-size: 14px;
+            border-radius: 5px;
+            font-size: 0.9em;
         }
 
         .original-price {
             text-decoration: line-through;
             color: #999;
-            font-size: 14px;
             margin-right: 10px;
+            font-size: 0.9em;
         }
 
         .discounted-price {
             color: #ff6b6b;
             font-weight: bold;
+        }
+
+        .discount-setting {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .discount-preview {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #666;
         }
 
         /* 响应式设计 */
@@ -325,69 +339,372 @@
             cursor: pointer;
             z-index: 1000;
         }
+
+        /* 通用按钮样式 */
+        .gradient-button {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .gradient-button:hover {
+            background: linear-gradient(45deg, #ff8e8e, #ff6b6b);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .gradient-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 添加商品按钮样式 */
+        #addProductBtn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        #addProductBtn:hover {
+            transform: scale(1.1);
+        }
+
+        .merchant-header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .merchant-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .merchant-details {
+            display: flex;
+            gap: 20px;
+        }
+
+        .merchant-details p {
+            margin: 0;
+            color: #666;
+        }
+
+        .merchant-nav {
+            display: flex;
+            gap: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .merchant-nav a {
+            color: #666;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .merchant-nav a:hover,
+        .merchant-nav a.active {
+            color: #ff6b6b;
+            background: rgba(255,107,107,0.1);
+        }
+
+        .discount-controls {
+            margin-bottom: 20px;
+        }
+
+        .discount-filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .discount-filters select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .discount-products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .discount-product-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .discount-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .discount-product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .discount-product-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .discount-product-card .price {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .discount-product-card .original-price {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .discount-product-card .discounted-price {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .discount-product-card .discount-period {
+            font-size: 0.9em;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <button class="logout-btn" onclick="logout()">退出登录</button>
     <!-- 顶部导航栏 -->
     <nav class="top-nav">
-        <div class="nav-logo">购物系统 - 商家管理</div>
+        <div class="nav-logo">商家管理系统</div>
         <div class="nav-menu">
-            <a href="#" onclick="showSection('products')" class="active" id="productsLink">商品管理</a>
-            <a href="#" onclick="showSection('sales')" id="salesLink">商品销量</a>
-            <a href="#" onclick="showSection('discount')" id="discountLink">折扣商品</a>
+            <a href="#" id="productsLink" onclick="showSection('products')">商品管理</a>
+            <a href="#" id="salesLink" onclick="showSection('sales')">销售统计</a>
+            <a href="#" id="discountLink" onclick="showSection('discount')">折扣管理</a>
         </div>
         <div class="nav-user">
-            <span class="merchant-welcome">商家名称</span>
-            <a href="index.html" class="logout">退出登录</a>
+            <span class="merchant-welcome">商家</span>
+            <a href="javascript:void(0)" class="logout" onclick="logout()">退出登录</a>
         </div>
     </nav>
 
     <div class="dashboard-container">
-        <!-- 商家信息 -->
-        <div class="merchant-info">
-            <h2>商家信息</h2>
-            <div class="merchant-details">
-                <div class="info-item">
-                    <label>商家ID</label>
-                    <p id="merchantId"></p>
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="merchant-info">
+                <img src="images/merchant-avatar.png" alt="商家头像" class="merchant-avatar" onerror="this.src='images/31.png'">
+                <h3 id="merchantName">加载中...</h3>
+            </div>
+            <nav class="dashboard-nav">
+                <button class="nav-item active" onclick="switchTab('overview')">概览</button>
+                <button class="nav-item" onclick="switchTab('products')">商品管理</button>
+                <button class="nav-item" onclick="switchTab('orders')">订单管理</button>
+                <button class="nav-item" onclick="switchTab('settings')">店铺设置</button>
+                <button class="nav-item logout" onclick="logout()">退出登录</button>
+            </nav>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 概览面板 -->
+            <div id="overview" class="dashboard-panel active">
+                <h2>店铺概览</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>今日订单</h3>
+                        <p id="todayOrders">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>今日销售额</h3>
+                        <p id="todaySales">¥0.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>商品总数</h3>
+                        <p id="totalProducts">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>待处理订单</h3>
+                        <p id="pendingOrders">0</p>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <label>商家名称</label>
-                    <p id="merchantName"></p>
-                </div>
-                <div class="info-item">
-                    <label>经营类型</label>
-                    <p id="merchantTypes"></p>
-                </div>
-                <div class="info-item">
-                    <label>注册时间</label>
-                    <p id="registerTime"></p>
+                <div class="recent-orders">
+                    <h3>最近订单</h3>
+                    <div id="recentOrdersList" class="orders-list">
+                        <!-- 订单列表将通过 JavaScript 动态加载 -->
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 商品管理 -->
-        <div id="productsSection" class="product-management">
-            <h2>商品管理</h2>
-            <button class="add-product-btn" onclick="showAddProductModal()">添加新商品</button>
-            <div class="products-grid" id="productsGrid"></div>
-        </div>
+            <!-- 商品管理面板 -->
+            <div id="products" class="dashboard-panel">
+                <h2>商品管理</h2>
+                <div class="action-bar">
+                    <button onclick="showAddProductModal()" class="primary-button">添加商品</button>
+                    <div class="search-bar">
+                        <input type="text" id="productSearch" placeholder="搜索商品...">
+                        <button onclick="searchProducts()">搜索</button>
+                    </div>
+                </div>
+                <div id="productsList" class="products-grid">
+                    <!-- 商品列表将通过 JavaScript 动态加载 -->
+                </div>
+            </div>
 
-        <!-- 销量统计 -->
-        <div id="salesSection" class="sales-container">
-            <h2>商品销量统计</h2>
-            <div id="salesList"></div>
-        </div>
+            <!-- 订单管理面板 -->
+            <div id="orders" class="dashboard-panel">
+                <h2>订单管理</h2>
+                <div class="order-filters">
+                    <select id="orderStatus" onchange="filterOrders()">
+                        <option value="all">全部订单</option>
+                        <option value="pending">待处理</option>
+                        <option value="paid">已支付</option>
+                        <option value="shipped">已发货</option>
+                        <option value="delivered">已完成</option>
+                        <option value="cancelled">已取消</option>
+                    </select>
+                    <input type="date" id="orderDate" onchange="filterOrders()">
+                </div>
+                <div id="ordersList" class="orders-table">
+                    <!-- 订单列表将通过 JavaScript 动态加载 -->
+                </div>
+            </div>
 
-        <!-- 折扣商品 -->
-        <div id="discountSection" class="discount-container">
-            <h2>折扣商品管理</h2>
-            <div id="discountList"></div>
+            <!-- 店铺设置面板 -->
+            <div id="settings" class="dashboard-panel">
+                <h2>店铺设置</h2>
+                <form id="settingsForm" class="settings-form">
+                    <div class="form-group">
+                        <label for="businessName">店铺名称</label>
+                        <input type="text" id="businessName" name="businessName">
+                    </div>
+                    <div class="form-group">
+                        <label for="businessType">经营类型</label>
+                        <select id="businessType" name="businessType" multiple>
+                            <option value="clothing">服装鞋包</option>
+                            <option value="electronics">电子数码</option>
+                            <option value="food">食品饮料</option>
+                            <option value="furniture">家居家装</option>
+                            <option value="beauty">美妆个护</option>
+                            <option value="sports">运动户外</option>
+                            <option value="books">图书文具</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">店铺描述</label>
+                        <textarea id="description" name="description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactPhone">联系电话</label>
+                        <input type="tel" id="contactPhone" name="contactPhone">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">店铺地址</label>
+                        <textarea id="address" name="address"></textarea>
+                    </div>
+                    <button type="submit" class="primary-button">保存设置</button>
+                </form>
+            </div>
+
+            <!-- 销售统计面板 -->
+            <div id="sales" class="dashboard-panel">
+                <h2>销售统计</h2>
+                <div id="salesList" class="sales-container"><!-- 由 JS 动态填充 --></div>
+            </div>
+
+            <!-- 折扣商品面板 -->
+            <div id="discount" class="dashboard-panel">
+                <h2>折扣商品</h2>
+                <div id="discountProductsList" class="discount-products-grid"><!-- 由 JS 动态填充 --></div>
+            </div>
         </div>
     </div>
 
-    <script src="js/database.js"></script>
+    <!-- 添加商品模态框 -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddProductModal()">&times;</span>
+            <h2>添加商品</h2>
+            <form id="addProductForm">
+                <div class="form-group">
+                    <label for="productName">商品名称</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">商品描述</label>
+                    <textarea id="productDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="productPrice">价格</label>
+                    <input type="number" id="productPrice" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="productStock">库存</label>
+                    <input type="number" id="productStock" required>
+                </div>
+                <div class="form-group">
+                    <label for="productCategory">分类</label>
+                    <select id="productCategory" required>
+                        <option value="">请选择分类</option>
+                        <option value="clothing">服装鞋包</option>
+                        <option value="electronics">电子数码</option>
+                        <option value="food">食品饮料</option>
+                        <option value="furniture">家居家装</option>
+                        <option value="beauty">美妆个护</option>
+                        <option value="sports">运动户外</option>
+                        <option value="books">图书文具</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="productDiscount">折扣 (%)</label>
+                    <input type="number" id="productDiscount" min="10" max="100" step="10" value="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="productImage">商品图片</label>
+                    <input type="file" id="productImage" accept="image/*" required>
+                </div>
+                <button type="submit" class="primary-button">添加商品</button>
+            </form>
+        </div>
+    </div>
+
     <script src="js/merchant_dashboard.js"></script>
     <script>
         // 页面加载时检查登录状态

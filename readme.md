@@ -1,6 +1,7 @@
 # 购物系统
 
-这是一个基于Express和MySQL的购物系统，支持商家管理和用户购物功能。
+## 项目说明
+这是一个基于 Express + MySQL 的动态购物网站系统，支持用户和商家两种角色，具备完整的购物车和订单管理功能。
 
 ## 功能特点
 
@@ -30,44 +31,95 @@
 
 ## 本地开发
 
-1. 克隆仓库：
-   ```bash
-   git clone <repository-url>
-   cd shopping-system
-   ```
+1. 克隆项目
+```bash
+git clone <your-repo-url>
+cd your-project
+```
 
-2. 安装依赖：
-   ```bash
-   npm install
-   ```
+2. 安装依赖
+```bash
+npm install
+```
 
-3. 创建`.env`文件并设置环境变量：
-   ```
-   DB_HOST=your_db_host
-   DB_USER=your_db_user
-   DB_PASSWORD=your_db_password
-   DB_NAME=your_db_name
-   ```
+3. 配置环境变量
+复制 `.env.example` 到 `.env`：
+```bash
+cp .env.example .env
+```
 
-4. 启动开发服务器：
-   ```bash
-   npm start
-   ```
+然后修改 `.env` 文件：
+```properties
+# 数据库配置
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=123456
+DB_NAME=shopping_system
 
-## 更新部署
+# 服务器配置
+PORT=3000
+NODE_ENV=development
 
-1. 提交更改到Git：
-   ```bash
-   git add .
-   git commit -m "更新说明"
-   git push
-   ```
+# JWT配置（使用 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))" 生成）
+JWT_SECRET=your-secret-key-please-change
 
-2. Netlify将自动检测到更改并重新部署
+# Netlify配置
+NETLIFY_SITE_URL=http://localhost:3000
+```
 
-## 注意事项
+4. 初始化数据库
+```bash
+mysql -u root -p < database.sql
+```
 
-- 确保数据库连接信息安全，不要提交到代码仓库
-- 图片上传限制为10MB
-- API请求超时时间设置为120秒
-- 所有API端点都以`/.netlify/functions/api`开头
+5. 启动开发服务器
+```bash
+npm run dev
+```
+
+## Netlify 部署
+
+1. 连接 GitHub 仓库
+- 在 Netlify 控制台创建新站点
+- 选择 "Import an existing project"
+- 选择你的 GitHub 仓库
+
+2. 配置构建设置
+- Build command: `npm run build`
+- Publish directory: `dist`
+
+3. 设置环境变量
+在 Netlify 控制台：
+- Site settings > Environment variables
+- 添加所有必需的环境变量：
+  - `DB_HOST`
+  - `DB_USER`
+  - `DB_PASSWORD`
+  - `DB_NAME`
+  - `JWT_SECRET`（使用新生成的随机值）
+  - `NODE_ENV=production`
+
+4. 配置域名（可选）
+- 在 "Domain settings" 中添加自定义域名
+- 设置 SSL 证书
+
+## 安全注意事项
+
+1. JWT 密钥
+- 不要在代码中硬编码 JWT_SECRET
+- 在生产环境使用足够长的随机密钥
+- 定期轮换密钥
+
+2. 数据库
+- 使用强密码
+- 限制数据库访问IP
+- 定期备份
+
+3. API 安全
+- 所有敏感操作都需要验证 token
+- 实施速率限制
+- 使用 HTTPS
+- 设置适当的 CORS 策略
+
+## 许可证
+MIT

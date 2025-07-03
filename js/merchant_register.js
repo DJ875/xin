@@ -1,190 +1,129 @@
-// 本地商家注册
-document.getElementById('merchantRegisterForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // 获取表单数据
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const businessName = document.getElementById('businessName').value;
-    
-    // 重置错误信息
-    clearErrors();
-    
-    // 表单验证
-    if (!validateForm(username, password, confirmPassword, businessName)) {
-        return;
-    }
-    
-    try {
-        // 使用本地API进行商家注册
-        const response = await fetch('http://localhost:3000/api/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username,
-                password,
-                userType: 'merchant',
-                businessName
-            })
-        });
+// 清理旧的 Node.js 代码，仅保留浏览器端逻辑
 
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || '注册失败');
-        }
-        
-        if (data.success) {
-            alert('本地商家注册成功！');
-            window.location.href = 'index.html';
-        } else {
-            throw new Error(data.message || '注册失败');
-        }
-    } catch (error) {
-        console.error('注册错误:', error);
-        showError('registerError', error.message || '注册失败，请稍后重试');
-    }
-});
+// 初始化 Netlify Identity
+const netlifyIdentity = window.netlifyIdentity;
 
-// Netlify注册处理
-function netlifyRegister() {
-    // 获取商家名称
-    const businessName = document.getElementById('businessName').value;
-    if (!businessName) {
-        showMessage('请输入商家名称', 'error');
-        return;
-    }
+// API 配置
+const { BASE_URL: REG_BASE, ENDPOINTS } = API_CONFIG; // ENDPOINTS.REGISTER 指向 /register
 
-    // 初始化Netlify Identity
-    window.netlifyIdentity.init({
-        locale: 'zh'
-    });
-
-    // 配置Netlify Identity Widget
-    const container = document.querySelector('#netlify-modal') || document.body;
-    window.netlifyIdentity.setConfig({
-        locale: 'zh',
-        container: container,
-        theme: {
-            mode: 'light',
-            logo: 'images/merchant-logo.png',
-            title: '商家注册',
-            labels: {
-                login: '商家登录',
-                signup: '商家注册',
-                email: '邮箱',
-                password: '密码',
-                button: '确定'
-            }
-        }
-    });
-    
-    // 保存商家名称
-    sessionStorage.setItem('businessName', businessName);
-    
-    // 监听注册事件
-    window.netlifyIdentity.on('signup', user => {
-        showMessage('注册成功，请查收邮件并确认注册', 'success');
-    });
-
-    // 监听确认事件
-    window.netlifyIdentity.on('confirm', user => {
-        const businessName = sessionStorage.getItem('businessName');
-        
-        // 注册到本地系统
-        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: user.email,
-                userType: 'merchant',
-                businessName: businessName,
-                netlifyToken: user.token.access_token
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // 清除临时数据
-                sessionStorage.removeItem('businessName');
-                
-                showMessage('注册成功，即将跳转到登录页面...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
-            } else {
-                throw new Error(data.message || '注册失败');
-            }
-        })
-        .catch(error => {
-            console.error('注册错误:', error);
-            showMessage(error.message || '注册失败，请稍后重试', 'error');
-            // 清除临时数据
-            sessionStorage.removeItem('businessName');
-        });
-    });
-    
-    // 打开注册窗口
-    window.netlifyIdentity.open('signup');
+// 读取并转换头像文件为 base64
+async function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
-// 显示消息
-function showMessage(message, type = 'error') {
-    const messageElement = document.getElementById('message');
-    if (messageElement) {
-        messageElement.textContent = message;
-        messageElement.className = `message ${type}`;
-        messageElement.style.display = 'block';
+// 本地注册处理（商家）
+window.localRegister = async function () {
+  clearErrors();
+
+  // 获取表单数据
+  const businessName = document.getElementById('businessName').value.trim();
+  const businessTypes = Array.from(
+    document.querySelectorAll('input[name="businessType"]:checked')
+  ).map(cb => cb.value);
+
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const confirm = document.getElementById('confirmPassword').value;
+
+  // 头像文件
+  const avatarFile = document.getElementById('avatar')?.files?.[0] || null;
+  let avatarBase64 = null;
+  if (avatarFile) {
+    avatarBase64 = await toBase64(avatarFile);
+  }
+
+  // 基本验证
+  if (!validateForm(businessName, businessTypes, username, password, confirm)) return;
+
+  try {
+    const res = await fetch(`${REG_BASE}${ENDPOINTS.REGISTER}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userType: 'merchant',
+        businessName,
+        businessTypes,
+        username,
+        password,
+        avatar: avatarBase64
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('注册成功，请登录');
+      window.location.replace('index.html');
+    } else {
+      showError('registerError', data.message || '注册失败');
     }
+  } catch (e) {
+    console.error('注册错误:', e);
+    showError('registerError', '服务器错误');
+  }
+};
+
+// Netlify 注册
+window.netlifySignup = function () {
+  const businessName = document.getElementById('businessName').value.trim();
+  const businessTypes = Array.from(
+    document.querySelectorAll('input[name="businessType"]:checked')
+  ).map(cb => cb.value);
+
+  if (!validateBusinessInfo(businessName, businessTypes)) return;
+
+  // 保存到 sessionStorage，在 login 页同步到服务器
+  sessionStorage.setItem('businessName', businessName);
+  sessionStorage.setItem('businessTypes', JSON.stringify(businessTypes));
+  sessionStorage.setItem('registrationType', 'netlify-merchant');
+
+  netlifyIdentity.open('signup');
+  netlifyIdentity.on('signup', () => {
+    alert('注册成功，请查收验证邮件');
+    setTimeout(() => (window.location.href = 'index.html'), 3000);
+  });
+};
+
+function validateForm(businessName, businessTypes, username, password, confirmPassword) {
+  let ok = true;
+  if (!validateBusinessInfo(businessName, businessTypes)) ok = false;
+  if (!username) { showError('usernameError', '请输入用户名'); ok = false; }
+  if (!password) { showError('passwordError', '请输入密码'); ok = false; }
+  else if (password.length < 6) { showError('passwordError', '密码至少6位'); ok = false; }
+  if (password !== confirmPassword) { showError('confirmPasswordError', '两次输入不一致'); ok = false; }
+  return ok;
 }
 
-function validateForm(username, password, confirmPassword, businessName) {
-    let isValid = true;
-    
-    // 商家名称验证
-    if (!businessName || businessName.length < 2) {
-        showError('businessNameError', '商家名称至少需要2个字符');
-        isValid = false;
-    }
-    
-    // 用户名验证
-    if (!username || username.length < 3) {
-        showError('usernameError', '用户名至少需要3个字符');
-        isValid = false;
-    }
-    
-    // 密码验证
-    if (!password || password.length < 6) {
-        showError('passwordError', '密码至少需要6个字符');
-        isValid = false;
-    }
-    
-    // 确认密码验证
-    if (password !== confirmPassword) {
-        showError('confirmPasswordError', '两次输入的密码不一致');
-        isValid = false;
-    }
-    
-    return isValid;
-}
-
-function showError(elementId, message) {
-    const errorElement = document.getElementById(elementId);
-    if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.style.display = 'block';
-    }
+function validateBusinessInfo(name, types) {
+  let ok = true;
+  if (!name) { showError('businessNameError', '请输入商家名称'); ok = false; }
+  if (types.length === 0) { showError('businessTypeError', '至少选择一种经营类型'); ok = false; }
+  return ok;
 }
 
 function clearErrors() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(element => {
-        element.textContent = '';
-        element.style.display = 'none';
-    });
-} 
+  document.querySelectorAll('.error-message').forEach(el => (el.textContent = ''));
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = msg;
+}
+
+// 给表单动态加头像输入
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('#merchantRegisterForm .login-form');
+  if (form && !document.getElementById('avatar')) {
+    const avatarGroup = document.createElement('div');
+    avatarGroup.className = 'form-group';
+    avatarGroup.innerHTML = `
+      <input type="file" id="avatar" accept="image/*">
+      <div class="error-message" id="avatarError"></div>
+    `;
+    const ref = form.querySelector('.error-message');
+    if (ref) form.insertBefore(avatarGroup, ref); else form.appendChild(avatarGroup);
+  }
+}); 

@@ -1,245 +1,178 @@
+// 初始化 Netlify Identity
+const netlifyIdentity = window.netlifyIdentity;
+
+// 提取 API 基本配置
+const { ENDPOINTS } = API_CONFIG;  // 移除 BASE_URL 的解构，因为它在 api.js 中已定义
+
+// 当前登录类型
 let currentLoginType = 'user';
 
-// 初始化Netlify Identity
-window.netlifyIdentity.init({
-    locale: 'zh'
-});
-
-function switchLoginType(type) {
+// 将所有函数声明移到全局作用域
+window.switchLoginType = function(type) {
+    console.log('切换登录类型:', type);
     currentLoginType = type;
     const userBtn = document.getElementById('userLoginBtn');
     const merchantBtn = document.getElementById('merchantLoginBtn');
-    const registerLink = document.getElementById('registerLink');
     const merchantRegisterLink = document.getElementById('merchantRegisterLink');
-    
-    if (type === 'user') {
-        userBtn.classList.add('active');
-        merchantBtn.classList.remove('active');
-        registerLink.style.display = 'block';
-        merchantRegisterLink.style.display = 'none';
-    } else {
+    const userRegisterLink = document.getElementById('registerLink');
+
+    if (type === 'merchant') {
         merchantBtn.classList.add('active');
         userBtn.classList.remove('active');
-        registerLink.style.display = 'none';
         merchantRegisterLink.style.display = 'block';
+        userRegisterLink.style.display = 'none';
+    } else {
+        userBtn.classList.add('active');
+        merchantBtn.classList.remove('active');
+        merchantRegisterLink.style.display = 'none';
+        userRegisterLink.style.display = 'block';
+    }
+};
+
+// 显示 Netlify 登录窗口
+window.showNetlifyLogin = function() {
+    console.log('打开 Netlify 登录窗口');
+    netlifyIdentity.open('login');
+    netlifyIdentity.on('login', user => {
+        console.log('Netlify 登录成功:', user);
+        handleNetlifyLogin(user);
+    });
+};
+
+// 处理 Netlify 登录
+async function handleNetlifyLogin(user) {
+    console.log('处理 Netlify 登录:', user);
+    try {
+        console.log('发送验证请求到:', `${API_CONFIG.BASE_URL}${ENDPOINTS.VERIFY}`);
+        const response = await fetch(`${API_CONFIG.BASE_URL}${ENDPOINTS.VERIFY}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'netlify-token': user.token.access_token
+            },
+            body: JSON.stringify({
+                userType: currentLoginType
+            })
+        });
+
+        const data = await response.json();
+        console.log('验证响应:', data);
+        
+        if (data.success) {
+            const savedUser = {
+                id: data.user.id || data.userId,
+                username: user.email || data.user.username,
+                userType: currentLoginType,
+                token: data.user?.token || null,
+                loginTime: Date.now()
+            };
+            console.log('保存用户信息:', savedUser);
+            localStorage.setItem('userInfo', JSON.stringify(savedUser));
+            // 兼容旧逻辑
+            localStorage.setItem('userId', savedUser.id);
+            localStorage.setItem('userType', savedUser.userType);
+            
+            const redirectUrl = currentLoginType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
+            console.log('重定向到:', redirectUrl);
+            window.location.href = redirectUrl;
+        } else {
+            document.getElementById('loginError').textContent = data.message;
+        }
+    } catch (error) {
+        console.error('登录错误:', error);
+        document.getElementById('loginError').textContent = '登录过程中发生错误';
     }
 }
 
 // 本地登录处理
-function localLogin() {
+window.localLogin = async function() {
+    console.log('开始本地登录');
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
+    // 清除之前的错误信息
     clearErrors();
     
-    if (!username || !password) {
-        if (!username) showError('usernameError', '请输入用户名');
-        if (!password) showError('passwordError', '请输入密码');
+    // 验证输入
+    if (!validateInput(username, password)) {
         return;
     }
-    
-    // 使用配置的API进行登录
-    fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            username,
-            password,
-            userType: currentLoginType,
-            loginType: 'local'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // 保存用户信息和登录时间
-            const loginInfo = {
-                ...data.user,
-                loginType: 'local',
-                loginTime: new Date().getTime()
-            };
-            localStorage.setItem('userInfo', JSON.stringify(loginInfo));
-            
-            // 根据用户类型跳转
-            window.location.replace(data.user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html');
-        } else {
-            throw new Error(data.message || '登录失败');
-        }
-    })
-    .catch(error => {
-        console.error('登录错误:', error);
-        showError('loginError', error.message || '登录失败，请稍后重试');
-    });
-}
 
-// 显示Netlify登录界面
-function showNetlifyLogin() {
-    // 设置当前登录类型
-    sessionStorage.setItem('loginType', currentLoginType);
-    
-    // 配置Netlify Identity Widget
-    window.netlifyIdentity.setConfig({
-        locale: 'zh',
-        theme: {
-            mode: 'light',
-            logo: currentLoginType === 'merchant' ? 'images/merchant-logo.png' : 'images/user-logo.png',
-            title: currentLoginType === 'merchant' ? '商家登录' : '用户登录',
-            labels: {
-                login: currentLoginType === 'merchant' ? '商家登录' : '用户登录',
-                signup: currentLoginType === 'merchant' ? '商家注册' : '用户注册',
-                email: '邮箱',
-                password: '密码',
-                button: '确定'
-            }
-        }
-    });
-    
-    // 监听登录事件
-    window.netlifyIdentity.on('login', user => {
-        // 获取用户类型
-        const userType = sessionStorage.getItem('loginType') || 'user';
-        
-        // 使用配置的API验证用户
-        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
+    try {
+        console.log('发送登录请求到:', `${API_CONFIG.BASE_URL}${ENDPOINTS.LOGIN}`);
+        const response = await fetch(`${API_CONFIG.BASE_URL}${ENDPOINTS.LOGIN}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                username: user.email,
-                userType: userType,
-                netlifyToken: user.token.access_token,
-                loginType: 'netlify'
+                username,
+                password,
+                userType: currentLoginType
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // 保存用户信息和登录时间
-                const loginInfo = {
-                    ...data.user,
-                    loginType: 'netlify',
-                    netlifyToken: user.token.access_token,
-                    loginTime: new Date().getTime()
-                };
-                localStorage.setItem('userInfo', JSON.stringify(loginInfo));
-                
-                // 根据用户类型跳转
-                window.location.replace(userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html');
-            } else {
-                throw new Error(data.message || '登录验证失败');
-            }
-        })
-        .catch(error => {
-            console.error('Netlify登录错误:', error);
-            showError('loginError', error.message || '登录失败，请稍后重试');
-            window.netlifyIdentity.logout();
         });
-    });
 
-    // 监听注册事件
-    window.netlifyIdentity.on('signup', user => {
-        showError('loginError', '注册成功，请查收邮件并确认注册');
-    });
-    
-    // 打开Netlify登录窗口
-    window.netlifyIdentity.open('login');
-}
-
-// 退出登录
-function logout() {
-    // 获取用户信息
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    
-    // 如果是Netlify用户，先退出Netlify
-    if (userInfo.loginType === 'netlify') {
-        if (window.netlifyIdentity) {
-            window.netlifyIdentity.logout();
-        }
-    }
-    
-    // 清除所有存储的信息
-    localStorage.clear();
-    sessionStorage.clear();
-    
-    // 强制清除Netlify Identity的cookie
-    document.cookie.split(";").forEach(function(c) { 
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-    });
-    
-    // 重定向到登录页面
-    window.location.replace('index.html');
-}
-
-function showError(elementId, message) {
-    const errorElement = document.getElementById(elementId);
-    if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.style.display = 'block';
-    }
-}
-
-function clearErrors() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(element => {
-        element.textContent = '';
-        element.style.display = 'none';
-    });
-}
-
-// 检查登录状态
-function checkLoginStatus() {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-        const user = JSON.parse(userInfo);
-        const loginTime = user.loginTime;
-        const currentTime = new Date().getTime();
+        const data = await response.json();
+        console.log('登录响应:', data);
         
-        // 如果登录时间超过24小时，自动登出
-        if (currentTime - loginTime > 24 * 60 * 60 * 1000) {
-            logout();
-            return false;
+        if (data.success) {
+            const savedUser2 = {
+                ...data.user,
+                loginTime: Date.now()
+            };
+            console.log('保存用户信息:', savedUser2);
+            localStorage.setItem('userInfo', JSON.stringify(savedUser2));
+            // 兼容旧逻辑
+            localStorage.setItem('userId', savedUser2.id);
+            localStorage.setItem('userType', savedUser2.userType);
+            
+            const redirectUrl = currentLoginType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
+            console.log('重定向到:', redirectUrl);
+            window.location.href = redirectUrl;
+        } else {
+            document.getElementById('loginError').textContent = data.message;
         }
-        return true;
+    } catch (error) {
+        console.error('登录错误:', error);
+        document.getElementById('loginError').textContent = '登录过程中发生错误';
     }
-    return false;
+};
+
+// 输入验证
+function validateInput(username, password) {
+    let isValid = true;
+    
+    if (!username) {
+        document.getElementById('usernameError').textContent = '请输入用户名';
+        isValid = false;
+    }
+    
+    if (!password) {
+        document.getElementById('passwordError').textContent = '请输入密码';
+        isValid = false;
+    }
+    
+    return isValid;
 }
 
-// 检查是否是从注册页面跳转来的
+// 清除错误信息
+function clearErrors() {
+    document.getElementById('usernameError').textContent = '';
+    document.getElementById('passwordError').textContent = '';
+    document.getElementById('loginError').textContent = '';
+}
+
+// 初始化页面
 document.addEventListener('DOMContentLoaded', () => {
-    const registrationType = sessionStorage.getItem('registrationType');
-    if (registrationType) {
-        // 如果是从注册页面跳转来的，自动打开对应的登录方式
-        if (registrationType === 'netlify') {
-            showNetlifyLogin();
-        }
-        // 清除注册类型信息
-        sessionStorage.removeItem('registrationType');
-    }
+    console.log('页面加载完成');
+    console.log('API配置:', { BASE_URL: API_CONFIG.BASE_URL, ENDPOINTS });
     
-    // 获取当前页面路径
-    const currentPath = window.location.pathname;
-    const isLoginPage = currentPath.includes('index.html') || currentPath.endsWith('/');
-    
-    // 如果是登录页面
-    if (isLoginPage) {
-        // 如果已登录且登录未过期，跳转到对应页面
-        const userInfo = localStorage.getItem('userInfo');
-        if (userInfo && checkLoginStatus()) {
-            const user = JSON.parse(userInfo);
-            window.location.replace(user.userType === 'merchant' ? 'merchant_dashboard.html' : 'main.html');
-        }
-    } else {
-        // 如果不是登录页面且未登录或登录已过期，跳转到登录页面
-        if (!checkLoginStatus()) {
-            window.location.replace('index.html');
-        }
-    }
-    
-    // 初始化登录类型
-    if (isLoginPage) {
-        switchLoginType('user');
+    if (netlifyIdentity && typeof netlifyIdentity.on === 'function') {
+        netlifyIdentity.on('init', user => {
+            console.log('Netlify Identity 初始化:', user);
+            if (user) {
+                handleNetlifyLogin(user);
+            }
+        });
     }
 }); 

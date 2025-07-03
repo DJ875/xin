@@ -3,45 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商家注册 - 商城系统</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>商家注册 - 购物系统</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/main.css">
     <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <script src="js/config.js"></script>
 </head>
-<body>
-    <div class="container">
-        <div class="login-box">
-            <div class="login-left">
-                <img src="images/login-character.jpg.png" alt="欢迎光临" class="character-image">
+<body class="auth-page">
+    <div class="auth-card" id="merchantRegisterForm">
+        <h2>商家注册</h2>
+        <p class="subtitle" style="text-align:center;margin-bottom:20px;">欢迎加入我们的商家团队</p>
+        <div class="login-form" id="merchantRegisterForm">
+            <div class="form-group">
+                <input type="text" id="businessName" placeholder="商家名称" required>
+                <span class="error-message" id="businessNameError"></span>
             </div>
-            <div class="login-right">
-                <h1>商家注册</h1>
-                <form id="merchantRegisterForm">
-                    <div class="form-group">
-                        <input type="text" id="businessName" placeholder="商家名称" required>
-                        <div class="error-message" id="businessNameError"></div>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="username" placeholder="用户名" required>
-                        <div class="error-message" id="usernameError"></div>
-                    </div>
-                    <div class="form-group">
-                        <input type="password" id="password" placeholder="密码" required>
-                        <div class="error-message" id="passwordError"></div>
-                    </div>
-                    <div class="form-group">
-                        <input type="password" id="confirmPassword" placeholder="确认密码" required>
-                        <div class="error-message" id="confirmPasswordError"></div>
-                    </div>
-                    <div class="error-message" id="registerError"></div>
-                    <div class="register-buttons">
-                        <button type="submit" class="login-button">本地注册</button>
-                        <button type="button" onclick="netlifySignup()" class="login-button netlify-button">Netlify注册</button>
-                    </div>
-                </form>
-                <div class="additional-links">
-                    <a href="index.html" class="back-to-login">返回登录</a>
+            <div class="form-group">
+                <label class="business-type-label">经营类型（可多选）</label>
+                <div class="business-types">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="businessType" value="clothing"> 服装鞋包
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="businessType" value="electronics"> 电子数码
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="businessType" value="food"> 食品饮料
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="businessType" value="furniture"> 家居家装
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="businessType" value="beauty"> 美妆个护
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="businessType" value="sports"> 运动户外
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="businessType" value="books"> 图书文具
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="businessType" value="other"> 其他
+                    </label>
                 </div>
+                <span class="error-message" id="businessTypeError"></span>
+            </div>
+            <div class="form-group">
+                <input type="text" id="username" placeholder="用户名" required>
+                <div class="error-message" id="usernameError"></div>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="密码" required>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+            <div class="form-group">
+                <input type="password" id="confirmPassword" placeholder="确认密码" required>
+                <div class="error-message" id="confirmPasswordError"></div>
+            </div>
+            <div class="error-message" id="registerError"></div>
+            <div class="login-buttons">
+                <button type="button" onclick="window.localRegister()" class="gradient-button">本地注册</button>
+                <button type="button" onclick="window.netlifySignup()" class="gradient-button">Netlify注册</button>
+            </div>
+            <div class="register-links">
+                <a href="index.html" class="register-link">返回登录</a>
             </div>
         </div>
     </div>

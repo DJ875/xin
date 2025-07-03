@@ -1,3 +1,32 @@
+// 若未先加载 config.js，这里提供兜底配置
+if(typeof window.API_CONFIG === 'undefined'){
+  const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
+  const BASE = isLocal?'/api':'/.netlify/functions/api';
+  window.API_CONFIG={
+    BASE_URL: BASE,
+    ENDPOINTS:{CART:'/cart',PRODUCTS:'/products',ORDERS:'/orders'}
+  };
+}
+
+// 全局退出登录函数（若尚未定义）
+if (typeof window.logout !== 'function') {
+    window.logout = function () {
+        try {
+            // 清除所有本地存储信息
+            localStorage.clear();
+            sessionStorage.clear();
+            // 关闭 Netlify Identity 会话（如果已加载）
+            if (window.netlifyIdentity && window.netlifyIdentity.currentUser()) {
+                window.netlifyIdentity.logout();
+            }
+        } catch (e) {
+            console.error('执行 logout 时出错:', e);
+        }
+        // 跳转到登录页面
+        window.location.replace('index.html');
+    };
+}
+
 // 获取用户信息
 function getUserInfo() {
     const userInfo = localStorage.getItem('userInfo');
@@ -11,10 +40,22 @@ function updateUserDisplay() {
     const logoutLink = document.querySelector('.logout');
     
     if (userInfo) {
-        userWelcome.textContent = userInfo.username;
-        logoutLink.textContent = '退出登录';
+        if (userWelcome) {
+            userWelcome.textContent = userInfo.username;
+        }
+        if (logoutLink) {
+            logoutLink.textContent = '退出登录';
+            logoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+        }
     } else {
-        window.location.href = 'index.html'; // 如果未登录，重定向到登录页
+        const currentPath = window.location.pathname;
+        const isLoginPage = currentPath.includes('index.html') || currentPath.endsWith('/');
+        if (!isLoginPage) {
+            window.location.replace('index.html');
+        }
     }
 }
 
@@ -108,30 +149,7 @@ class ShoppingCart {
         const total = this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         cartTotal.textContent = total.toFixed(2);
 
-        // 同步购物车数据到ESP32
-        await this.syncToESP32(total);
-    }
-
-    async syncToESP32(total) {
-        try {
-            const response = await fetch('/.netlify/functions/api/cart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    items: this.items,
-                    total: total,
-                    itemCount: this.items.length
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('同步失败');
-            }
-        } catch (error) {
-            console.error('同步到ESP32失败:', error);
-        }
+        // 已取消与硬件同步
     }
 }
 
@@ -191,6 +209,7 @@ function addToCart(product) {
     // 动画结束后处理
     setTimeout(() => {
         animationEl.remove();
+        if(product.discount && product.discount < 100){ product.price = (product.price * product.discount / 100).toFixed(2); }
         cart.addItem(product);
         
         // 创建蓝色主题提示
@@ -290,7 +309,8 @@ function toggleCart() {
 
 // 结算功能
 function checkout() {
-    alert('结算功能正在开发中...');
+    // 跳转到结算页面
+    window.location.href = 'checkout.html';
 }
 
 // 初始化
@@ -349,4 +369,100 @@ document.querySelectorAll('.category-item').forEach(item => {
     item.addEventListener('mouseleave', () => {
         item.style.transform = 'scale(1)';
     });
+});
+
+/**
+ * -------------------- Chat Widget --------------------
+ * 覆盖全站，可拖动，点击图标展开/收起。
+ */
+
+function initChatWidget(){
+  if(document.getElementById('chatWidget')) return; // 已初始化
+
+  // 注入样式
+  const styleTag = document.createElement('style');
+  styleTag.textContent = `
+  .chat-toggle-btn{position:fixed;left:20px;bottom:90px;width:50px;height:50px;border-radius:50%;background:#4d94ff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,.2);} 
+  .chat-widget{position:fixed;left:20px;bottom:20px;width:320px;height:420px;background:#fff;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,.15);display:flex;flex-direction:column;z-index:1000;}
+  .chat-widget.collapsed{display:none;}
+  .chat-header{cursor:move;background:#4d94ff;color:#fff;padding:10px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center;}
+  .chat-body{flex:1;overflow-y:auto;padding:10px;font-size:14px;}
+  .chat-input{display:flex;border-top:1px solid #eee;}
+  .chat-input textarea{flex:1;border:none;padding:8px;resize:none;font-size:14px;}
+  .chat-input button{width:70px;border:none;background:#4d94ff;color:#fff;cursor:pointer;}
+  .chat-msg-q{color:#333;margin:6px 0;font-weight:bold;}
+  .chat-msg-a{color:#555;margin:6px 0;}
+  .chat-divider{border-top:1px dashed #ccc;margin:8px 0;}
+  `;
+  document.head.appendChild(styleTag);
+
+  // toggle button
+  const toggleBtn = document.createElement('div');
+  toggleBtn.className = 'chat-toggle-btn';
+  toggleBtn.textContent='💬';
+  document.body.appendChild(toggleBtn);
+
+  // widget
+  const widget = document.createElement('div');
+  widget.id = 'chatWidget';
+  widget.className = 'chat-widget collapsed';
+  widget.innerHTML = `
+    <div class="chat-header"><span>智能助手</span><span style="cursor:pointer;">—</span></div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-input">
+        <textarea id="chatInput" rows="2" placeholder="输入提问..."></textarea>
+        <button id="chatSend">发送</button>
+    </div>`;
+  document.body.appendChild(widget);
+
+  const header = widget.querySelector('.chat-header');
+  const chatBody = widget.querySelector('#chatBody');
+  const inputEl = widget.querySelector('#chatInput');
+
+  // 折叠/展开
+  function toggle(){
+    if(widget.classList.contains('collapsed')){ widget.classList.remove('collapsed'); }
+    else{ widget.classList.add('collapsed'); }
+  }
+  toggleBtn.addEventListener('click', toggle);
+  widget.querySelector('.chat-header span:last-child').addEventListener('click', toggle);
+
+  // 拖动
+  let isDragging=false, startX, startY;
+  header.addEventListener('mousedown', e=>{
+    isDragging=true; startX=e.clientX; startY=e.clientY; widget.style.transition='none';
+  });
+  document.addEventListener('mousemove', e=>{
+    if(!isDragging) return; const dx=e.clientX-startX; const dy=e.clientY-startY; const rect=widget.getBoundingClientRect();
+    widget.style.right = (window.innerWidth - rect.right - dx) + 'px';
+    widget.style.bottom = (window.innerHeight - rect.bottom - dy) + 'px';
+    startX=e.clientX; startY=e.clientY;
+  });
+  document.addEventListener('mouseup', ()=>{isDragging=false; widget.style.transition='';});
+
+  // 发送
+  widget.querySelector('#chatSend').addEventListener('click', async ()=>{
+    const q = inputEl.value.trim(); if(!q) return; inputEl.value='';
+    chatBody.innerHTML += `<div class='chat-msg-q'>我: ${q}</div>`;
+    chatBody.scrollTop = chatBody.scrollHeight;
+    try{
+      const es = new EventSource(`${API_CONFIG.BASE_URL}/chat-stream?question=${encodeURIComponent(q)}`);
+      const spanId = 'ans-'+Date.now();
+      chatBody.innerHTML += `<div class='chat-msg-a'>助手: <span id='${spanId}'></span></div>`;
+      const ansSpan = chatBody.querySelector(`#${spanId}`);
+      es.onmessage = ev=>{
+          if(ev.data==="[DONE]"){ es.close(); chatBody.innerHTML += `<hr class='chat-divider'>`; chatBody.scrollTop=chatBody.scrollHeight; return; }
+          ansSpan.textContent += ev.data;
+          chatBody.scrollTop = chatBody.scrollHeight;
+      };
+      es.onerror = err=>{ es.close(); ansSpan.textContent += ' (出错)'; };
+    }catch(err){
+      chatBody.innerHTML += `<div class='chat-msg-a'>助手: 出错了 - ${err.message}</div>`;
+    }
+    chatBody.scrollTop = chatBody.scrollHeight;
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initChatWidget();
 });

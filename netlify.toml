@@ -1,25 +1,19 @@
 [build]
-  publish = "/"
   functions = "netlify/functions"
+  publish = "."
 
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-
-[[redirects]]
-  from = "/.netlify/functions/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-  force = true
+[dev]
+  framework = "#static"
+  port = 3000
+  publish = "."
+  autoLaunch = true
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = true 
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200 
