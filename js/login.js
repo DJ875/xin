@@ -55,10 +55,11 @@ async function handleNetlifyLogin(user) {
             })
         });
 
+        if(!response.ok){ throw new Error('sync status '+response.status); }
         const data = await response.json();
         console.log('验证响应:', data);
         
-        if (data.success) {
+        if (data && data.success) {
             const savedUser = {
                 id: data.user.id || data.userId,
                 username: user.email || data.user.username,
@@ -76,7 +77,7 @@ async function handleNetlifyLogin(user) {
             console.log('重定向到:', redirectUrl);
             window.location.href = redirectUrl;
         } else {
-            document.getElementById('loginError').textContent = data.message;
+            throw new Error(data?.message || 'sync failed');
         }
     } catch (error) {
         console.warn('Netlify 同步失败, 仅使用 Identity 本地信息:', error);
