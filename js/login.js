@@ -79,8 +79,12 @@ async function handleNetlifyLogin(user) {
             document.getElementById('loginError').textContent = data.message;
         }
     } catch (error) {
-        console.error('登录错误:', error);
-        document.getElementById('loginError').textContent = '登录过程中发生错误';
+        console.warn('Netlify 同步失败, 仅使用 Identity 本地信息:', error);
+        const savedUser = { id: user.id, username: user.email, userType: currentLoginType, loginTime: Date.now() };
+        localStorage.setItem('userInfo', JSON.stringify(savedUser));
+        localStorage.setItem('userType', currentLoginType);
+        const redirectUrl = currentLoginType==='merchant' ? 'merchant_dashboard.html' : 'main.html';
+        window.location.href = redirectUrl;
     }
 }
 
