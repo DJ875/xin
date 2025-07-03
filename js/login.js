@@ -75,6 +75,7 @@ async function handleNetlifyLogin(user) {
             
             const redirectUrl = currentLoginType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
             console.log('重定向到:', redirectUrl);
+            netlifyIdentity.close();
             window.location.href = redirectUrl;
         } else {
             throw new Error(data?.message || 'sync failed');
@@ -85,6 +86,7 @@ async function handleNetlifyLogin(user) {
         localStorage.setItem('userInfo', JSON.stringify(savedUser));
         localStorage.setItem('userType', currentLoginType);
         const redirectUrl = currentLoginType==='merchant' ? 'merchant_dashboard.html' : 'main.html';
+        netlifyIdentity.close();
         window.location.href = redirectUrl;
     }
 }
@@ -133,6 +135,7 @@ window.localLogin = async function() {
             
             const redirectUrl = currentLoginType === 'merchant' ? 'merchant_dashboard.html' : 'main.html';
             console.log('重定向到:', redirectUrl);
+            netlifyIdentity.close();
             window.location.href = redirectUrl;
         } else {
             document.getElementById('loginError').textContent = data.message;
